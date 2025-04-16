@@ -1,51 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'main.dart';
-
-// **************************************************************************
-// JsonSerializableGenerator
-// **************************************************************************
-
-Process _$ProcessFromJson(Map<String, dynamic> json) => Process(
-  id: json['id'] as String,
-  name: json['name'] as String,
-  description: json['description'] as String,
-  isMendatary: json['isMendatary'] as bool,
-  difficultLevel: (json['difficultLevel'] as num).toInt(),
-  group: json['group'] as String,
-  assignedAt: DateTime.parse(json['assignedAt'] as String),
-  steps:
-      (json['steps'] as List<dynamic>)
-          .map((e) => Step.fromJson(e as Map<String, dynamic>))
-          .toList(),
-);
-
-Map<String, dynamic> _$ProcessToJson(Process instance) => <String, dynamic>{
-  'id': instance.id,
-  'name': instance.name,
-  'description': instance.description,
-  'isMendatary': instance.isMendatary,
-  'difficultLevel': instance.difficultLevel,
-  'group': instance.group,
-  'assignedAt': instance.assignedAt.toIso8601String(),
-  'steps': instance.steps,
-};
-
-Step _$StepFromJson(Map<String, dynamic> json) => Step(
-  id: json['id'] as String,
-  text: json['text'] as String,
-  done: json['done'] as bool,
-  deadline: DateTime.parse(json['deadline'] as String),
-  isMendatary: json['isMendatary'] as bool,
-);
-
-Map<String, dynamic> _$StepToJson(Step instance) => <String, dynamic>{
-  'id': instance.id,
-  'text': instance.text,
-  'done': instance.done,
-  'deadline': instance.deadline.toIso8601String(),
-  'isMendatary': instance.isMendatary,
-};
+part of 'controllers.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -69,24 +24,25 @@ final processGroupsListProvider = AutoDisposeProvider<List<String>>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef ProcessGroupsListRef = AutoDisposeProviderRef<List<String>>;
-String _$sortedProcessHash() => r'054f4899c667017b06e0c9dd6a13ae7bbd0d4f94';
+String _$sortedProcessHash() => r'9c127d37c977f202840178ad214d9f5b6bd11260';
 
 /// See also [sortedProcess].
 @ProviderFor(sortedProcess)
-final sortedProcessProvider = AutoDisposeProvider<List<Process>>.internal(
-  sortedProcess,
-  name: r'sortedProcessProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$sortedProcessHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final sortedProcessProvider =
+    AutoDisposeProvider<List<models.Process>>.internal(
+      sortedProcess,
+      name: r'sortedProcessProvider',
+      debugGetCreateSourceHash:
+          const bool.fromEnvironment('dart.vm.product')
+              ? null
+              : _$sortedProcessHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef SortedProcessRef = AutoDisposeProviderRef<List<Process>>;
+typedef SortedProcessRef = AutoDisposeProviderRef<List<models.Process>>;
 String _$selectedGroupsHash() => r'6399dc494adf7091112038032aa75c20799c666f';
 
 /// See also [SelectedGroups].
@@ -121,12 +77,12 @@ final selectedProcessesProvider =
     );
 
 typedef _$SelectedProcesses = AutoDisposeNotifier<List<String>>;
-String _$processListHash() => r'd29d0184e055bfdcb566539e3e208bc8aa1bbabb';
+String _$processListHash() => r'670da94267f59b44915778065d61dcd393bddf3a';
 
 /// See also [ProcessList].
 @ProviderFor(ProcessList)
 final processListProvider =
-    AutoDisposeNotifierProvider<ProcessList, List<Process>>.internal(
+    AutoDisposeNotifierProvider<ProcessList, List<models.Process>>.internal(
       ProcessList.new,
       name: r'processListProvider',
       debugGetCreateSourceHash:
@@ -137,6 +93,6 @@ final processListProvider =
       allTransitiveDependencies: null,
     );
 
-typedef _$ProcessList = AutoDisposeNotifier<List<Process>>;
+typedef _$ProcessList = AutoDisposeNotifier<List<models.Process>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
