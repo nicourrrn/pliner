@@ -11,8 +11,10 @@ Process _$ProcessFromJson(Map<String, dynamic> json) => Process(
   name: json['name'] as String,
   description: json['description'] as String,
   isMendatary: json['isMendatary'] as bool,
-  difficultLevel: (json['difficultLevel'] as num).toInt(),
+  processType: $enumDecode(_$ProcessTypeEnumMap, json['processType']),
   group: json['group'] as String,
+  timeNeeded: Duration(microseconds: (json['timeNeeded'] as num).toInt()),
+  deadline: DateTime.parse(json['deadline'] as String),
   assignedAt: DateTime.parse(json['assignedAt'] as String),
   steps:
       (json['steps'] as List<dynamic>)
@@ -25,17 +27,23 @@ Map<String, dynamic> _$ProcessToJson(Process instance) => <String, dynamic>{
   'name': instance.name,
   'description': instance.description,
   'isMendatary': instance.isMendatary,
-  'difficultLevel': instance.difficultLevel,
+  'processType': _$ProcessTypeEnumMap[instance.processType]!,
+  'timeNeeded': instance.timeNeeded.inMicroseconds,
   'group': instance.group,
+  'deadline': instance.deadline.toIso8601String(),
   'assignedAt': instance.assignedAt.toIso8601String(),
   'steps': instance.steps,
+};
+
+const _$ProcessTypeEnumMap = {
+  ProcessType.parrallel: 'parrallel',
+  ProcessType.focus: 'focus',
 };
 
 Step _$StepFromJson(Map<String, dynamic> json) => Step(
   id: json['id'] as String,
   text: json['text'] as String,
   done: json['done'] as bool,
-  deadline: DateTime.parse(json['deadline'] as String),
   isMendatary: json['isMendatary'] as bool,
 );
 
@@ -43,6 +51,5 @@ Map<String, dynamic> _$StepToJson(Step instance) => <String, dynamic>{
   'id': instance.id,
   'text': instance.text,
   'done': instance.done,
-  'deadline': instance.deadline.toIso8601String(),
   'isMendatary': instance.isMendatary,
 };

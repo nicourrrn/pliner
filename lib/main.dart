@@ -8,7 +8,6 @@ import "package:go_router/go_router.dart";
 import 'package:date_format/date_format.dart';
 import "dart:convert";
 import "package:path_provider/path_provider.dart";
-import "package:uuid/uuid.dart";
 import "./models.dart";
 import "./convetrers.dart";
 import "./controllers.dart";
@@ -198,7 +197,7 @@ class ProcessListTile extends HookConsumerWidget {
       child: ListTile(
         title: Text(process.name),
         subtitle: Text(process.group),
-        trailing: Text(process.difficultLevel.toString()),
+        trailing: Text(process.timeNeeded.inHours.toString()),
         onTap: () {
           context.push("/process/${process.id}");
         },
@@ -227,7 +226,7 @@ class ProcessDetailView extends HookConsumerWidget {
       appBar: AppBar(
         title: Text(process.name),
         actions: [
-          Text(process.difficultLevel.toString()),
+          Text(process.timeNeeded.inHours.toString()),
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () {
@@ -242,7 +241,7 @@ class ProcessDetailView extends HookConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(process.description, style: TextStyle(fontSize: 18)),
-            const Gap(32),
+            const Gap(18),
             Expanded(child: StepListView(processId: processId)),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -278,9 +277,6 @@ class StepListView extends HookConsumerWidget {
         final step = steps[index];
         return ListTile(
           title: Text(step.text),
-          subtitle: Text(
-            'Deadline: ${formatDate(step.deadline, [yy, '-', mm, '-', dd])}',
-          ),
           tileColor: step.isMendatary ? Colors.grey[300] : Colors.grey[100],
           trailing: Checkbox(
             value: step.done,
@@ -312,16 +308,7 @@ class ProcessCreateView extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     var baseProcess =
         processId == null
-            ? Process(
-              id: Uuid().v1(),
-              name: '',
-              description: '',
-              isMendatary: false,
-              difficultLevel: 1,
-              group: '',
-              assignedAt: DateTime.now(),
-              steps: [],
-            )
+            ? Process.zero()
             : ref
                 .watch(processListProvider)
                 .firstWhere((process) => process.id == processId);
