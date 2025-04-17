@@ -8,9 +8,11 @@ import "package:go_router/go_router.dart";
 import 'package:date_format/date_format.dart';
 import "dart:convert";
 import "package:path_provider/path_provider.dart";
+import "package:self_process_manager/sources.dart";
 import "./models.dart";
 import "./convetrers.dart";
 import "./controllers.dart";
+import "./theme.dart";
 
 void main() {
   runApp(const ProviderScope(child: MyApp()));
@@ -45,12 +47,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = MediaQuery.of(context).size.width > 600;
     return MaterialApp.router(
       title: 'Task manager',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
+      theme: isDesktop ? desctopTheme : mobileTheme,
       routerConfig: _router,
     );
   }
@@ -82,15 +82,7 @@ class MyHomePage extends HookConsumerWidget {
           IconButton(
             icon: const Icon(Icons.save),
             onPressed: () async {
-              final directory = await getApplicationDocumentsDirectory();
-              final file = File('${directory.path}/processes.json');
-              final jsonString = jsonEncode(
-                ref
-                    .read(processListProvider)
-                    .map((process) => process.toJson())
-                    .toList(),
-              );
-              await file.writeAsString(jsonString);
+              await saveProcessesToFile(ref.read(processListProvider));
             },
           ),
           IconButton(
@@ -181,19 +173,23 @@ class ProcessListTile extends HookConsumerWidget {
     if (selectedProcesses.contains(processId)) {
       color.value = Colors.red[400];
     } else if (process.isMendatary) {
-      color.value = Colors.grey[400];
+      color.value = Colors.purple[100];
     } else {
       color.value = Colors.grey[150];
     }
 
-    return Badge(
-      alignment: Alignment.topLeft,
-      label:
-          process.isMendatary
-              ? const Text("Mendatary")
-              : const Text("Not mendatary"),
-
-      backgroundColor: process.isMendatary ? Colors.red[400] : Colors.grey[400],
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            color.value!,
+            Theme.of(context).canvasColor,
+            Theme.of(context).canvasColor,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
       child: ListTile(
         title: Text(process.name),
         subtitle: Text(process.group),
@@ -210,6 +206,27 @@ class ProcessListTile extends HookConsumerWidget {
         },
       ),
     );
+    // return Badge(
+    //   alignment: Alignment.topLeft,
+    //   label:
+    //       process.isMendatary ? const Icon(Icons.star_border) : const Text(""),
+    //   backgroundColor: process.isMendatary ? Colors.red[400] : Colors.grey[400],
+    //   child: ListTile(
+    //     title: Text(process.name),
+    //     subtitle: Text(process.group),
+    //     trailing: Text(process.timeNeeded.inHours.toString()),
+    //     onTap: () {
+    //       context.push("/process/${process.id}");
+    //     },
+    //     tileColor: color.value,
+    //
+    //     onLongPress: () {
+    //       ref
+    //           .read(selectedProcessesProvider.notifier)
+    //           .toggleProcess(process.id);
+    //     },
+    //   ),
+    // );
   }
 }
 
@@ -389,6 +406,7 @@ class ProcessCreateView extends HookConsumerWidget {
                     ref
                         .read(processListProvider.notifier)
                         .appendOrReplaceProcess(process.value);
+                    saveProcessesToFile(ref.read(processListProvider));
                     context.pop();
                   },
                   child: const Text('To not mendatary'),
@@ -400,6 +418,7 @@ class ProcessCreateView extends HookConsumerWidget {
                     ref
                         .read(processListProvider.notifier)
                         .appendOrReplaceProcess(process.value);
+                    saveProcessesToFile(ref.read(processListProvider));
                     context.pop();
                   },
                   child: const Text('To mendatary'),
