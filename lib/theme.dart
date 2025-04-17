@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import "package:google_fonts/google_fonts.dart";
 
+bool isDesktop(BuildContext context) {
+  return MediaQuery.of(context).size.width > 600;
+}
+
 final desctopTheme = ThemeData(
   textTheme: TextTheme(
     bodySmall: TextStyle(

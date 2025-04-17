@@ -10,6 +10,7 @@ import "./models.dart" as models;
 part 'controllers.g.dart';
 
 final processNameFilterProvider = StateProvider<String>((ref) => "");
+final choosedProcessProvider = StateProvider<String>((ref) => "");
 
 @riverpod
 class SelectedGroups extends _$SelectedGroups {
@@ -120,6 +121,20 @@ class ProcessList extends _$ProcessList {
   }
 
   appendOrReplaceProcess(models.Process process) {
+    models.Process? existingProcess =
+        state.where((p) => p.id == process.id).firstOrNull;
+    if (existingProcess != null) {
+      process = process.copyWith(
+        steps:
+            existingProcess.steps.map((step) {
+              final existingStep = process.steps.firstWhere(
+                (s) => s.id == step.id,
+                orElse: () => step,
+              );
+              return existingStep.copyWith(done: step.done);
+            }).toList(),
+      );
+    }
     state = state.where((p) => p.id != process.id).toList();
     state = [...state, process];
   }
