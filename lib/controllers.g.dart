@@ -94,7 +94,7 @@ final processListProvider =
     );
 
 typedef _$ProcessList = AutoDisposeNotifier<List<models.Process>>;
-String _$userControllerHash() => r'b8ac86ce0fe5460bb8d456b30b219f1beecb249f';
+String _$userControllerHash() => r'27c853ba616b953a1338b142c7f7b3996c7a500d';
 
 /// See also [UserController].
 @ProviderFor(UserController)

@@ -38,6 +38,8 @@ class MyHomePage extends HookConsumerWidget {
   const MyHomePage({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final heightIndicator = useState(0.0);
+
     return Scaffold(
       appBar: AppBar(
         title: TextField(
@@ -52,38 +54,24 @@ class MyHomePage extends HookConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.save),
-            onPressed: () async {
-              await saveProcessesToFile(ref.read(processListProvider));
-            },
+            onPressed:
+                () async =>
+                    await saveProcessesToFile(ref.read(processListProvider)),
           ),
           IconButton(
             icon: const Icon(Icons.upload_file),
-            onPressed: () async {
-              await loadProcesses(ref);
-            },
+            onPressed: () async => await loadProcesses(ref),
           ),
           if (ref.watch(userControllerProvider).isLoggedIn)
             IconButton(
               icon: const Icon(Icons.logout),
-              onPressed: () {
-                ref
-                    .read(userControllerProvider.notifier)
-                    .updateUser(
-                      User(
-                        username: '',
-                        password: '',
-                        token: '',
-                        isLoggedIn: false,
-                      ),
-                    );
-              },
+              onPressed:
+                  () => ref.read(userControllerProvider.notifier).cleanUser(),
             )
           else
             IconButton(
               icon: const Icon(Icons.login),
-              onPressed: () {
-                context.push("/user/login");
-              },
+              onPressed: () => context.push("/user/login"),
             ),
           if (ref.watch(selectedProcessesProvider).isNotEmpty)
             IconButton(
@@ -97,63 +85,64 @@ class MyHomePage extends HookConsumerWidget {
             ),
         ],
       ),
-      floatingActionButton:
-          isDesktop(context)
-              ? null
-              : FloatingActionButton(
-                onPressed: () {
-                  context.push("/process/create");
-                },
-                child: const Icon(Icons.add),
-              ),
+
       body: SafeArea(
         child: Column(
           children: [
             if (isDesktop(context)) ...[
               const Gap(8.0),
               OutlinedButton(
-                onPressed: () {
-                  context.push("/process/create");
-                },
+                onPressed: () => context.push("/process/create"),
                 child: const Text("New process"),
               ),
             ],
+            const Gap(8.0),
             Expanded(
-              child: ListView.builder(
-                itemCount: ref.watch(sortedProcessProvider).length,
-                itemBuilder: (context, index) {
-                  final process = ref.watch(sortedProcessProvider)[index];
-                  return Padding(
-                    padding: EdgeInsets.only(top: index == 0 ? 8.0 : 0),
-                    child: ProcessListTile(processId: process.id),
-                  );
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (notification) {
+                  if (notification is OverscrollNotification) {
+                    heightIndicator.value -= notification.overscroll * 2;
+                    if (heightIndicator.value < 0) {
+                      heightIndicator.value = 0;
+                    } else if (heightIndicator.value > 125) {
+                      heightIndicator.value = 125;
+                    }
+                    debugPrint("heightIndicator: ${heightIndicator.value}");
+                  }
+
+                  if (notification is ScrollEndNotification) {
+                    if (heightIndicator.value == 125) {
+                      context.push("/process/create");
+                    }
+                    heightIndicator.value = 0;
+                  }
+
+                  return false;
                 },
+
+                child: ListView.builder(
+                  itemCount: ref.watch(sortedProcessProvider).length + 1,
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        height: heightIndicator.value,
+                        width: double.infinity,
+                        alignment: Alignment.topCenter,
+                        child: Text(
+                          "✍️New",
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                      );
+                    }
+                    final process = ref.watch(sortedProcessProvider)[index - 1];
+                    return ProcessListTile(processId: process.id);
+                  },
+                ),
               ),
             ),
 
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Wrap(
-                spacing: 8.0,
-                runSpacing: 8.0,
-                children:
-                    ref
-                        .watch(processGroupsListProvider)
-                        .map(
-                          (group) => FilterChip(
-                            label: Text(group),
-                            onSelected:
-                                (value) => ref
-                                    .read(selectedGroupsProvider.notifier)
-                                    .toggleGroup(group),
-                            selected: ref
-                                .watch(selectedGroupsProvider)
-                                .contains(group),
-                          ),
-                        )
-                        .toList(),
-              ),
-            ),
+            GroupChips(),
           ],
         ),
       ),
@@ -171,39 +160,83 @@ class ProcessDetailView extends HookConsumerWidget {
         .watch(processListProvider)
         .firstWhere((p) => p.id == processId);
 
-    final titleText =
-        "${process.processType.name} ${process.timeNeeded.inHours.toString()}h ${process.deadline.difference(DateTime.now()).inDays}d left";
+    var titleText = "";
+    if (process.timeNeeded.inHours > 0) {
+      titleText =
+          "${process.processType.name} for ${process.timeNeeded.inHours.toString()}h, ";
+    }
+    titleText += "${process.deadline.difference(DateTime.now()).inDays}d left";
+
+    final heightIndicator = useState(0.0);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(titleText, style: Theme.of(context).textTheme.titleSmall),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              context.push("/process/${process.id}/edit");
-            },
-          ),
+          if (isDesktop(context))
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () => context.push("/process/${process.id}/edit"),
+            ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(process.name, style: Theme.of(context).textTheme.titleMedium),
-            Text(process.description),
-            const Gap(16),
-            Expanded(child: StepListView(processId: processId)),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(process.group),
-                Text(
-                  'Assigned At: ${formatDate(process.assignedAt, [yy, '-', mm, '-', dd])}',
+      body: GestureDetector(
+        onVerticalDragUpdate: (details) {
+          heightIndicator.value += details.delta.dy * 2.5;
+          if (heightIndicator.value > 100) {
+            heightIndicator.value = 100;
+          } else if (heightIndicator.value < 0) {
+            heightIndicator.value = 0;
+          }
+        },
+        onVerticalDragEnd: (_) {
+          if (heightIndicator.value == 100) {
+            context.push("/process/${process.id}/edit");
+          }
+          heightIndicator.value = 0;
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                height: heightIndicator.value,
+                width: double.infinity,
+                alignment: Alignment.topCenter,
+                child: Text(
+                  "✍️Edit",
+                  style: Theme.of(context).textTheme.bodyLarge,
                 ),
-              ],
-            ),
-          ],
+              ),
+              SizedBox(
+                width: double.infinity,
+                child: SelectableText(
+                  process.name,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              SizedBox(
+                width: double.infinity,
+                child: SelectableText(
+                  process.description,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+              const Gap(16),
+              Expanded(child: StepListView(processId: processId)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(process.group),
+                  Text(
+                    'Assigned At: ${formatDate(process.assignedAt, [yy, '-', mm, '-', dd])}',
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -217,7 +250,7 @@ class ProcessCreateView extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    var baseProcess =
+    final baseProcess =
         processId == null
             ? Process.zero()
             : ref

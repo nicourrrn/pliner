@@ -184,4 +184,13 @@ class UserController extends _$UserController {
   updateUser(models.User user) {
     state = user;
   }
+
+  cleanUser() {
+    state = models.User(
+      username: "",
+      password: "",
+      isLoggedIn: false,
+      token: "",
+    );
+  }
 }

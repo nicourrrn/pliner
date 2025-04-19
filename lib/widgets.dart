@@ -99,3 +99,34 @@ class ProcessListTile extends HookConsumerWidget {
     );
   }
 }
+
+class GroupChips extends HookConsumerWidget {
+  const GroupChips({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedGroups = ref.watch(selectedGroupsProvider);
+    final processGroups = ref.watch(processGroupsListProvider);
+
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Wrap(
+        spacing: 8.0,
+        runSpacing: 8.0,
+        children:
+            processGroups
+                .map(
+                  (group) => FilterChip(
+                    label: Text(group),
+                    selected: selectedGroups.contains(group),
+                    onSelected:
+                        (value) => ref
+                            .read(selectedGroupsProvider.notifier)
+                            .toggleGroup(group),
+                  ),
+                )
+                .toList(),
+      ),
+    );
+  }
+}
