@@ -20,44 +20,28 @@ class StepListView extends HookConsumerWidget {
       itemCount: steps.length,
       itemBuilder: (context, index) {
         final step = steps[index];
-        return Container(
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(color: Colors.grey[300]!, width: 1.0),
-            ),
-            gradient: LinearGradient(
-              colors: [
-                step.isMendatary ? Colors.purple[100]! : Colors.grey[50]!,
-                Theme.of(context).canvasColor,
-                Theme.of(context).canvasColor,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+        return ListTile(
+          title: Text(
+            step.text,
+            style: TextStyle(
+              decoration: step.done ? TextDecoration.lineThrough : null,
+              color: step.isMendatary ? Colors.black : Colors.grey[600],
             ),
           ),
-
-          child: ListTile(
-            title: Text(
-              step.text,
-              style: TextStyle(
-                decoration: step.done ? TextDecoration.lineThrough : null,
-              ),
-            ),
-            trailing: Checkbox(
-              value: step.done,
-              onChanged: (value) {
-                final updatedSteps =
-                    steps.map((s) {
-                      if (s.id == step.id) {
-                        return s.copyWith(done: value!);
-                      }
-                      return s;
-                    }).toList();
-                ref
-                    .read(processListProvider.notifier)
-                    .updateProcessSteps(processId.toString(), updatedSteps);
-              },
-            ),
+          trailing: Checkbox(
+            value: step.done,
+            onChanged: (value) {
+              final updatedSteps =
+                  steps.map((s) {
+                    if (s.id == step.id) {
+                      return s.copyWith(done: value!);
+                    }
+                    return s;
+                  }).toList();
+              ref
+                  .read(processListProvider.notifier)
+                  .updateProcessSteps(processId.toString(), updatedSteps);
+            },
           ),
         );
       },
@@ -75,16 +59,12 @@ class ProcessListTile extends HookConsumerWidget {
         .watch(processListProvider)
         .firstWhere((process) => process.id == processId);
     final selectedProcesses = ref.watch(selectedProcessesProvider);
-    final color = useState(
-      process.isMendatary ? Colors.grey[400] : Colors.grey[150],
-    );
+    final color = useState(Colors.grey[100]);
 
     if (selectedProcesses.contains(processId)) {
       color.value = Colors.red[400];
-    } else if (process.isMendatary) {
-      color.value = Colors.purple[100];
     } else {
-      color.value = Colors.grey[150];
+      color.value = Colors.grey[100];
     }
 
     return Container(
@@ -102,7 +82,7 @@ class ProcessListTile extends HookConsumerWidget {
       child: ListTile(
         title: Text(process.name),
         subtitle: Text(process.group),
-        trailing: Text(process.timeNeeded.inHours.toString()),
+        trailing: process.isMendatary ? Icon(Icons.upgrade) : null,
         onTap: () {
           isDesktop(context)
               ? ref.read(choosedProcessProvider.notifier).state = process.id

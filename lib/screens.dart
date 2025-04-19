@@ -40,21 +40,14 @@ class MyHomePage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
-        title: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10.0),
-          child: SearchBar(
+        title: TextField(
+          decoration: const InputDecoration(
             hintText: "Search",
-            padding: WidgetStateProperty.all(
-              const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-            ),
-            elevation: WidgetStateProperty.all(1),
-            shape: WidgetStateProperty.all(
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-            ),
-            onChanged: (value) {
-              ref.read(processNameFilterProvider.notifier).state = value;
-            },
+            border: InputBorder.none,
           ),
+          onChanged: (value) {
+            ref.read(processNameFilterProvider.notifier).state = value;
+          },
         ),
         actions: [
           IconButton(
@@ -69,6 +62,29 @@ class MyHomePage extends HookConsumerWidget {
               await loadProcesses(ref);
             },
           ),
+          if (ref.watch(userControllerProvider).isLoggedIn)
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: () {
+                ref
+                    .read(userControllerProvider.notifier)
+                    .updateUser(
+                      User(
+                        username: '',
+                        password: '',
+                        token: '',
+                        isLoggedIn: false,
+                      ),
+                    );
+              },
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.login),
+              onPressed: () {
+                context.push("/user/login");
+              },
+            ),
           if (ref.watch(selectedProcessesProvider).isNotEmpty)
             IconButton(
               icon: const Icon(Icons.delete),
@@ -103,8 +119,7 @@ class MyHomePage extends HookConsumerWidget {
               ),
             ],
             Expanded(
-              child: ListView.separated(
-                separatorBuilder: (context, index) => const Gap(4.0),
+              child: ListView.builder(
                 itemCount: ref.watch(sortedProcessProvider).length,
                 itemBuilder: (context, index) {
                   final process = ref.watch(sortedProcessProvider)[index];
@@ -155,11 +170,13 @@ class ProcessDetailView extends HookConsumerWidget {
     final process = ref
         .watch(processListProvider)
         .firstWhere((p) => p.id == processId);
+
+    final titleText =
+        "${process.processType.name} ${process.timeNeeded.inHours.toString()}h ${process.deadline.difference(DateTime.now()).inDays}d left";
     return Scaffold(
       appBar: AppBar(
-        title: Text(process.name),
+        title: Text(titleText, style: Theme.of(context).textTheme.titleSmall),
         actions: [
-          Text(process.timeNeeded.inHours.toString()),
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () {
@@ -173,6 +190,7 @@ class ProcessDetailView extends HookConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text(process.name, style: Theme.of(context).textTheme.titleMedium),
             Text(process.description),
             const Gap(16),
             Expanded(child: StepListView(processId: processId)),
@@ -300,6 +318,54 @@ class ProcessCreateView extends HookConsumerWidget {
                   child: const Text('To mendatary'),
                 ),
               ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class LoginScreen extends HookConsumerWidget {
+  const LoginScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userInfo = useState(User(username: '', password: ''));
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Login')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              decoration: const InputDecoration(labelText: 'Username'),
+              onChanged: (value) {
+                userInfo.value = userInfo.value.copyWith(username: value);
+              },
+            ),
+            TextField(
+              decoration: const InputDecoration(labelText: 'Password'),
+              obscureText: true,
+              onChanged: (value) {
+                userInfo.value = userInfo.value.copyWith(password: value);
+              },
+            ),
+            const Gap(16.0),
+            ElevatedButton(
+              onPressed: () {
+                userInfo.value = userInfo.value.copyWith(
+                  token: "token",
+                  isLoggedIn: true,
+                );
+                ref
+                    .read(userControllerProvider.notifier)
+                    .updateUser(userInfo.value);
+                context.pop();
+              },
+              child: const Text('Login'),
             ),
           ],
         ),

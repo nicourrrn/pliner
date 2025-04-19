@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import "package:go_router/go_router.dart";
 import "./theme.dart";
-import "./controllers.dart";
 import "./screens.dart";
 
 void main() {
@@ -12,12 +11,6 @@ void main() {
 final _routerProvider = Provider<GoRouter>(
   (ref) => GoRouter(
     initialLocation: "/",
-    redirect: (context, state) {
-      if (isDesktop(context)) {
-        return null;
-      }
-      return null;
-    },
 
     routes: [
       GoRoute(
@@ -45,6 +38,10 @@ final _routerProvider = Provider<GoRouter>(
           final processId = state.pathParameters['processId']!;
           return ProcessCreateView(processId: processId);
         },
+      ),
+      GoRoute(
+        path: "/user/login",
+        builder: (context, state) => const LoginScreen(),
       ),
     ],
   ),

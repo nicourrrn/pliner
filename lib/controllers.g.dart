@@ -77,7 +77,7 @@ final selectedProcessesProvider =
     );
 
 typedef _$SelectedProcesses = AutoDisposeNotifier<List<String>>;
-String _$processListHash() => r'670da94267f59b44915778065d61dcd393bddf3a';
+String _$processListHash() => r'1c663e49cca0935505f51af2040571bc7c0ba502';
 
 /// See also [ProcessList].
 @ProviderFor(ProcessList)
@@ -94,5 +94,22 @@ final processListProvider =
     );
 
 typedef _$ProcessList = AutoDisposeNotifier<List<models.Process>>;
+String _$userControllerHash() => r'b8ac86ce0fe5460bb8d456b30b219f1beecb249f';
+
+/// See also [UserController].
+@ProviderFor(UserController)
+final userControllerProvider =
+    AutoDisposeNotifierProvider<UserController, models.User>.internal(
+      UserController.new,
+      name: r'userControllerProvider',
+      debugGetCreateSourceHash:
+          const bool.fromEnvironment('dart.vm.product')
+              ? null
+              : _$userControllerHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+typedef _$UserController = AutoDisposeNotifier<models.User>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

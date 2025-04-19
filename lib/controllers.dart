@@ -4,8 +4,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import "package:file_picker/file_picker.dart";
 import "dart:convert";
-import "package:path_provider/path_provider.dart";
 import "./models.dart" as models;
+import "./sources.dart";
 
 part 'controllers.g.dart';
 
@@ -92,18 +92,7 @@ class ProcessList extends _$ProcessList {
   }
 
   _loadProcesses() async {
-    final directory = await getApplicationDocumentsDirectory();
-    final file = File('${directory.path}/processes.json');
-    if (!file.existsSync()) {
-      return;
-    }
-    final jsonString = await file.readAsString();
-    final List<dynamic> jsonList = jsonDecode(jsonString);
-    state =
-        jsonList
-            .map((json) => models.Process.fromJson(json))
-            .toList()
-            .cast<models.Process>();
+    state = await loadProcessFromFile();
   }
 
   updateProcessSteps(String processId, List<models.Step> steps) {
@@ -121,19 +110,18 @@ class ProcessList extends _$ProcessList {
   }
 
   appendOrReplaceProcess(models.Process process) {
-    models.Process? existingProcess =
-        state.where((p) => p.id == process.id).firstOrNull;
-    if (existingProcess != null) {
-      process = process.copyWith(
-        steps:
-            existingProcess.steps.map((step) {
-              final existingStep = process.steps.firstWhere(
-                (s) => s.id == step.id,
-                orElse: () => step,
-              );
-              return existingStep.copyWith(done: step.done);
-            }).toList(),
-      );
+    if (state.any((p) => p.id == process.id)) {
+      var processToReplace = state.firstWhere((p) => p.id == process.id);
+      var newSteps =
+          process.steps.map((p) {
+            var stepToReplace =
+                processToReplace.steps
+                    .where((s) => s.text == p.text)
+                    .firstOrNull;
+            if (stepToReplace == null) return p;
+            return p.copyWith(id: stepToReplace.id, done: stepToReplace.done);
+          }).toList();
+      process = process.copyWith(steps: newSteps);
     }
     state = state.where((p) => p.id != process.id).toList();
     state = [...state, process];
@@ -183,5 +171,17 @@ loadProcesses(WidgetRef ref) async {
   for (var process in file) {
     final newProcess = models.Process.fromJson(process);
     ref.read(processListProvider.notifier).appendProcess(newProcess);
+  }
+}
+
+@riverpod
+class UserController extends _$UserController {
+  @override
+  models.User build() {
+    return models.User(username: "", password: "");
+  }
+
+  updateUser(models.User user) {
+    state = user;
   }
 }

@@ -4,7 +4,13 @@ import 'package:uuid/uuid.dart';
 part 'models.g.dart';
 part 'models.freezed.dart';
 
-enum ProcessType { parrallel, focus }
+enum ProcessType {
+  parrallel("Parrallel"),
+  focus("Focus");
+
+  final String name;
+  const ProcessType(this.name);
+}
 
 @freezed
 @JsonSerializable()
@@ -66,4 +72,22 @@ class Step with _$Step {
 
   factory Step.fromJson(Map<String, dynamic> json) => _$StepFromJson(json);
   Map<String, dynamic> toJson() => _$StepToJson(this);
+}
+
+@freezed
+@JsonSerializable()
+class User with _$User {
+  User({
+    required this.username,
+    required this.password,
+    this.token,
+    this.isLoggedIn = false,
+  });
+  final String username;
+  final String password;
+  final String? token;
+  final bool isLoggedIn;
+
+  factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
+  Map<String, dynamic> toJson() => _$UserToJson(this);
 }

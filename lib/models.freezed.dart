@@ -148,4 +148,69 @@ as bool,
 }
 
 
+
+/// @nodoc
+mixin _$User {
+
+ String get username; String get password; String? get token; bool get isLoggedIn;
+/// Create a copy of User
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$UserCopyWith<User> get copyWith => _$UserCopyWithImpl<User>(this as User, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is User&&(identical(other.username, username) || other.username == username)&&(identical(other.password, password) || other.password == password)&&(identical(other.token, token) || other.token == token)&&(identical(other.isLoggedIn, isLoggedIn) || other.isLoggedIn == isLoggedIn));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,username,password,token,isLoggedIn);
+
+@override
+String toString() {
+  return 'User(username: $username, password: $password, token: $token, isLoggedIn: $isLoggedIn)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $UserCopyWith<$Res>  {
+  factory $UserCopyWith(User value, $Res Function(User) _then) = _$UserCopyWithImpl;
+@useResult
+$Res call({
+ String username, String password, String? token, bool isLoggedIn
+});
+
+
+
+
+}
+/// @nodoc
+class _$UserCopyWithImpl<$Res>
+    implements $UserCopyWith<$Res> {
+  _$UserCopyWithImpl(this._self, this._then);
+
+  final User _self;
+  final $Res Function(User) _then;
+
+/// Create a copy of User
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? username = null,Object? password = null,Object? token = freezed,Object? isLoggedIn = null,}) {
+  return _then(User(
+username: null == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
+as String,password: null == password ? _self.password : password // ignore: cast_nullable_to_non_nullable
+as String,token: freezed == token ? _self.token : token // ignore: cast_nullable_to_non_nullable
+as String?,isLoggedIn: null == isLoggedIn ? _self.isLoggedIn : isLoggedIn // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+}
+
+
 // dart format on

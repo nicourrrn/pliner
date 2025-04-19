@@ -53,3 +53,17 @@ Map<String, dynamic> _$StepToJson(Step instance) => <String, dynamic>{
   'done': instance.done,
   'isMendatary': instance.isMendatary,
 };
+
+User _$UserFromJson(Map<String, dynamic> json) => User(
+  username: json['username'] as String,
+  password: json['password'] as String,
+  token: json['token'] as String?,
+  isLoggedIn: json['isLoggedIn'] as bool? ?? false,
+);
+
+Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
+  'username': instance.username,
+  'password': instance.password,
+  'token': instance.token,
+  'isLoggedIn': instance.isLoggedIn,
+};

@@ -11,3 +11,17 @@ saveProcessesToFile(List<Process> processes) async {
   );
   await file.writeAsString(jsonString);
 }
+
+Future<List<Process>> loadProcessFromFile() async {
+  final directory = await getApplicationDocumentsDirectory();
+  final file = File('${directory.path}/processes.json');
+  if (!file.existsSync()) {
+    return [];
+  }
+  final jsonString = await file.readAsString();
+  final List<dynamic> jsonList = jsonDecode(jsonString);
+  return jsonList
+      .map((json) => Process.fromJson(json))
+      .toList()
+      .cast<Process>();
+}
