@@ -90,7 +90,17 @@ class ProcessList extends _$ProcessList {
   }
 
   _loadProcesses() async {
-    state = await loadProcessFromFile();
+    var processes = await loadProcessFromFile();
+    processes =
+        processes
+            .map(
+              (process) => process.copyWith(
+                steps: {for (final s in process.steps) s.id: s}.values.toList(),
+              ),
+            )
+            .toList();
+
+    state = processes;
   }
 
   setProcesses(List<models.Process> processes) {

@@ -29,6 +29,7 @@ dependencies:
   gap: ^3.0.1
   syncfusion_flutter_sliders: ^29.1.38
   google_fonts: ^6.2.1
+  shared_preferences: ^2.5.3
 
 dev_dependencies:
   flutter_test:

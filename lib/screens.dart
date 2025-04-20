@@ -72,21 +72,24 @@ class MyHomePage extends HookConsumerWidget {
                     ref.read(userControllerProvider).username,
                     ref.read(processListProvider),
                   );
+                  debugPrint("Processes saved");
                   final processes = await loadProcessFromServer(
                     ref.read(userControllerProvider).username,
                   );
+                  debugPrint("Processes: $processes");
                   ref
                       .read(processListProvider.notifier)
                       .setProcesses(processes);
                 } catch (e) {
-                  debugPrint("Error: $e");
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     showDialog(
                       context: context,
                       builder:
                           (context) => AlertDialog(
                             title: const Text("Error"),
-                            content: const Text("Failed to load processes"),
+                            content: Text(
+                              "Failed to load processes with error $e",
+                            ),
                             actions: [
                               TextButton(
                                 onPressed: () => context.pop(),
