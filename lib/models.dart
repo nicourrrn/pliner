@@ -26,6 +26,7 @@ class Process with _$Process {
     required this.deadline,
     required this.assignedAt,
     required this.steps,
+    required this.editAt,
   });
   final String id;
   final String name;
@@ -37,6 +38,7 @@ class Process with _$Process {
   final DateTime deadline;
   final DateTime assignedAt;
   final List<Step> steps;
+  final DateTime editAt;
 
   factory Process.fromJson(Map<String, dynamic> json) =>
       _$ProcessFromJson(json);
@@ -53,6 +55,7 @@ class Process with _$Process {
     timeNeeded: const Duration(hours: 3),
     assignedAt: DateTime.now(),
     steps: [],
+    editAt: DateTime.now(),
   );
 }
 

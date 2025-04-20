@@ -75,6 +75,22 @@ final dioProvider = AutoDisposeProvider<Dio>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef DioRef = AutoDisposeProviderRef<Dio>;
+String _$databaseHash() => r'5b617b7287a9aa079742ff29ab99cfb63e73165e';
+
+/// See also [database].
+@ProviderFor(database)
+final databaseProvider = AutoDisposeFutureProvider<Database>.internal(
+  database,
+  name: r'databaseProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$databaseHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef DatabaseRef = AutoDisposeFutureProviderRef<Database>;
 String _$selectedGroupsHash() => r'6399dc494adf7091112038032aa75c20799c666f';
 
 /// See also [SelectedGroups].
@@ -109,7 +125,7 @@ final selectedProcessesProvider =
     );
 
 typedef _$SelectedProcesses = AutoDisposeNotifier<List<String>>;
-String _$processListHash() => r'f472045a38d61763c53fc85526489ab7bde53086';
+String _$processListHash() => r'08b16fc4b9e441d6360980a46241bece2975af33';
 
 /// See also [ProcessList].
 @ProviderFor(ProcessList)
@@ -126,7 +142,7 @@ final processListProvider =
     );
 
 typedef _$ProcessList = AutoDisposeNotifier<List<models.Process>>;
-String _$userControllerHash() => r'e15a7de6fb78a3dbbe6665a371c3ce7e91470632';
+String _$userControllerHash() => r'443c988272100d1f7ccf14b05b70de9f0e03ebfa';
 
 /// See also [UserController].
 @ProviderFor(UserController)

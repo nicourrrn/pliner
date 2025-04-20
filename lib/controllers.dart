@@ -4,11 +4,16 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import "./models.dart" as models;
 import "./sources.dart";
 import "package:dio/dio.dart";
+import "package:sqflite/sqflite.dart";
+import "package:path_provider/path_provider.dart";
 
 part 'controllers.g.dart';
 
 final processNameFilterProvider = StateProvider<String>((ref) => "");
 final choosedProcessProvider = StateProvider<String>((ref) => "");
+final newProcessesToUploadProvider = StateProvider<List<models.Process>>(
+  (ref) => [],
+);
 
 @riverpod
 class SelectedGroups extends _$SelectedGroups {
@@ -228,5 +233,42 @@ Dio dio(Ref ref) {
       connectTimeout: const Duration(seconds: 5),
       receiveTimeout: const Duration(seconds: 5),
     ),
+  );
+}
+
+@riverpod
+Future<Database> database(Ref ref) async {
+  final directory = await getApplicationDocumentsDirectory();
+  return openDatabase(
+    "${directory.path}/processes.db",
+    version: 1,
+    onCreate: (db, version) {
+      db.execute("""
+            CREATE TABLE IF NOT EXISTS processes (
+                id TEXT PRIMARY KEY,
+                name TEXT,
+                description TEXT,
+                isMandatory BOOLEAN,
+                processType TEXT,
+                timeNeeded INTEGER,
+                group_name TEXT,
+                deadline TEXT,
+                assignedAt TEXT,
+                owner TEXT,
+                editAt TEXT,
+                FOREIGN KEY (owner) REFERENCES users (username)
+            )
+            """);
+      db.execute("""
+            CREATE TABLE IF NOT EXISTS steps (
+                id TEXT PRIMARY KEY,
+                text TEXT,
+                done BOOLEAN,
+                isMandatory BOOLEAN,
+                process_id TEXT,
+                FOREIGN KEY (process_id) REFERENCES processes (id)
+            )
+      """);
+    },
   );
 }

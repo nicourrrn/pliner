@@ -30,6 +30,7 @@ dependencies:
   syncfusion_flutter_sliders: ^29.1.38
   google_fonts: ^6.2.1
   shared_preferences: ^2.5.3
+  sqflite: ^2.4.1
 
 dev_dependencies:
   flutter_test:

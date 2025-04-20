@@ -22,7 +22,7 @@ class StepListView extends HookConsumerWidget {
         final step = steps[index];
         return ListTile(
           title: Text(
-            step.text,
+            "${step.text} ${step.id.substring(0, 8)}",
             style: TextStyle(
               decoration: step.done ? TextDecoration.lineThrough : null,
               color: step.isMandatory ? Colors.black : Colors.grey[600],

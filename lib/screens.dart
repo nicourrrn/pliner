@@ -65,21 +65,55 @@ class MyHomePage extends HookConsumerWidget {
 
           if (ref.watch(userControllerProvider).isLoggedIn) ...[
             IconButton(
-              icon: const Icon(Icons.refresh),
+              icon: Badge(
+                label: Text(
+                  ref.watch(newProcessesToUploadProvider).length.toString(),
+                ),
+
+                child: const Icon(Icons.refresh),
+              ),
               onPressed: () async {
                 try {
-                  await saveProcessesToServer(
-                    ref.read(userControllerProvider).username,
-                    ref.read(processListProvider),
-                  );
-                  debugPrint("Processes saved");
-                  final processes = await loadProcessFromServer(
+                  final serverProcesses = await loadProcessFromServer(
                     ref.read(userControllerProvider).username,
                   );
-                  debugPrint("Processes: $processes");
+                  final serverIdList =
+                      serverProcesses.map((process) => process.id).toList();
+                  final localProcesses = ref.read(processListProvider);
+                  final localProcessesWithoutDeleted =
+                      localProcesses
+                          .where((process) => serverIdList.contains(process.id))
+                          .toList();
+                  debugPrint("Local processes without deleted: ");
+
+                  final newestProcesses =
+                      serverProcesses.map((serverProcess) {
+                        final localProcess = localProcessesWithoutDeleted
+                            .firstWhere(
+                              (p) => p.id == serverProcess.id,
+                              orElse:
+                                  () => Process.zero().copyWith(
+                                    editAt: DateTime(1970),
+                                  ),
+                            );
+                        return localProcess.editAt.isAfter(serverProcess.editAt)
+                            ? localProcess
+                            : serverProcess;
+                      }).toList() +
+                      ref.read(newProcessesToUploadProvider);
+
+                  debugPrint("Newest processes: $newestProcesses");
+
+                  saveProcessesToServer(
+                    ref.read(userControllerProvider).username,
+                    newestProcesses,
+                  );
+
                   ref
                       .read(processListProvider.notifier)
-                      .setProcesses(processes);
+                      .setProcesses(newestProcesses);
+
+                  ref.read(newProcessesToUploadProvider.notifier).state = [];
                 } catch (e) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     showDialog(
@@ -136,7 +170,6 @@ class MyHomePage extends HookConsumerWidget {
                     } else if (heightIndicator.value > 100) {
                       heightIndicator.value = 100;
                     }
-                    debugPrint("heightIndicator: ${heightIndicator.value}");
                   }
 
                   if (notification is ScrollEndNotification) {
@@ -288,6 +321,7 @@ class ProcessCreateView extends HookConsumerWidget {
             : ref
                 .watch(processListProvider)
                 .firstWhere((process) => process.id == processId);
+    debugPrint("Base process: $baseProcess");
 
     final process = useState(baseProcess);
 
@@ -339,18 +373,12 @@ class ProcessCreateView extends HookConsumerWidget {
               autofocus: true,
               controller: textEditingController,
               onChanged: (value) {
-                var lines = value.split("\n");
-                var difficultLevel = int.tryParse(
-                  lines[0][lines[0].length - 1],
-                );
-                if (difficultLevel != null) {
-                  lines[0] = lines[0].substring(0, lines[0].length - 1);
-                }
                 process.value = processFromText(
                   value,
                   process.value.group,
                   process.value.isMandatory,
                   process.value.id,
+                  process.value.steps,
                 );
               },
               minLines: 2,
@@ -361,11 +389,19 @@ class ProcessCreateView extends HookConsumerWidget {
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    process.value = process.value.copyWith(isMandatory: false);
+                    process.value = process.value.copyWith(
+                      isMandatory: false,
+                      editAt: DateTime.now(),
+                    );
                     ref
                         .read(processListProvider.notifier)
                         .appendOrReplaceProcess(process.value);
                     saveProcessesToFile(ref.read(processListProvider));
+                    saveProcessesToSqlite(ref);
+                    ref.read(newProcessesToUploadProvider.notifier).state = [
+                      ...ref.read(newProcessesToUploadProvider),
+                      process.value,
+                    ];
                     context.pop();
                   },
                   child: const Text('To not mendatory'),
@@ -373,11 +409,19 @@ class ProcessCreateView extends HookConsumerWidget {
                 const Gap(8.0),
                 ElevatedButton(
                   onPressed: () {
-                    process.value = process.value.copyWith(isMandatory: true);
+                    process.value = process.value.copyWith(
+                      isMandatory: true,
+                      editAt: DateTime.now(),
+                    );
                     ref
                         .read(processListProvider.notifier)
                         .appendOrReplaceProcess(process.value);
                     saveProcessesToFile(ref.read(processListProvider));
+                    saveProcessesToSqlite(ref);
+                    ref.read(newProcessesToUploadProvider.notifier).state = [
+                      ...ref.read(newProcessesToUploadProvider),
+                      process.value,
+                    ];
                     context.pop();
                   },
                   child: const Text('To mendatory'),

@@ -3,6 +3,10 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import "package:dio/dio.dart";
 import "./models.dart";
+import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:sqflite/sqflite.dart";
+import "./controllers.dart";
 
 const String baseUrl = "http://192.168.0.101:8000/";
 
@@ -31,24 +35,53 @@ Future<List<Process>> loadProcessFromFile() async {
 
 Future<List<Process>> loadProcessFromServer(String username) async {
   final dio = Dio();
-  try {
-    final resp = await dio.get("${baseUrl}processes/user/$username");
-    final List<dynamic> jsonList = resp.data;
-    return jsonList.map((json) => Process.fromJson(json)).toList();
-  } catch (e) {
-    print(e);
-    throw e;
-  }
+  final resp = await dio.get("${baseUrl}processes/user/$username");
+  final List<dynamic> jsonList = resp.data;
+  return jsonList.map((json) => Process.fromJson(json)).toList();
 }
 
 saveProcessesToServer(String username, List<Process> process) async {
   final dio = Dio();
-  try {
-    for (var p in process) {
-      await dio.post("${baseUrl}processes/?owner=$username", data: p.toJson());
+  for (var p in process) {
+    await dio.post("${baseUrl}processes/?owner=$username", data: p.toJson());
+  }
+}
+
+@riverpod
+Future<List<Process>> loadProcessesFromSqlite(Ref ref) async {
+  final db = ref.watch(databaseProvider).value;
+  final processes = await db?.query('processes');
+  if (processes == null) {
+    return [];
+  }
+  for (var process in processes) {
+    final steps = await db?.query(
+      'steps',
+      where: 'processId = ?',
+      whereArgs: [process['id']],
+    );
+    process['steps'] = steps;
+  }
+  return processes.map((t) => Process.fromJson(t)).toList();
+}
+
+saveProcessesToSqlite(WidgetRef ref) {
+  final db = ref.watch(databaseProvider).value;
+  final processes = ref.watch(processListProvider);
+  if (db != null) {
+    for (var process in processes) {
+      db.insert(
+        'processes',
+        process.toJson(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      for (var step in process.steps) {
+        db.insert(
+          'steps',
+          step.toJson(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
     }
-  } catch (e) {
-    print(e);
-    throw e;
   }
 }

@@ -20,6 +20,7 @@ Process _$ProcessFromJson(Map<String, dynamic> json) => Process(
       (json['steps'] as List<dynamic>)
           .map((e) => Step.fromJson(e as Map<String, dynamic>))
           .toList(),
+  editAt: DateTime.parse(json['editAt'] as String),
 );
 
 Map<String, dynamic> _$ProcessToJson(Process instance) => <String, dynamic>{
@@ -33,6 +34,7 @@ Map<String, dynamic> _$ProcessToJson(Process instance) => <String, dynamic>{
   'deadline': instance.deadline.toIso8601String(),
   'assignedAt': instance.assignedAt.toIso8601String(),
   'steps': instance.steps,
+  'editAt': instance.editAt.toIso8601String(),
 };
 
 const _$ProcessTypeEnumMap = {

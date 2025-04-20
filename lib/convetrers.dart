@@ -8,7 +8,7 @@ String processToText(Process process) {
     text += "${process.description}\n";
   }
   for (var step in process.steps) {
-    text += "${step.isMandatory ? "+" : "-"} ${step.text}\n";
+    text += "${step.isMandatory ? "-" : "+"} ${step.text}\n";
   }
   return text;
 }
@@ -51,7 +51,10 @@ Process processFromText(
   if (lines.length > 1) {
     description = lines
         .sublist(1)
-        .where((line) => !(line.startsWith("-") || line.startsWith("+")))
+        .where(
+          (line) =>
+              !(line.startsWith("-") || line.startsWith("+") || line.isEmpty),
+        )
         .join("\n");
     newSteps =
         lines.where((line) => line.startsWith("-") || line.startsWith("+")).map(
@@ -63,11 +66,12 @@ Process processFromText(
                     id: Uuid().v1(),
                     text: line.substring(1).trim(),
                     done: false,
-                    isMandatory: line.startsWith("+") ? true : false,
+                    isMandatory: line.startsWith("-") ? true : false,
                   ),
             );
+            print("step: $step coied");
             return step.copyWith(
-              isMandatory: line.startsWith("+") ? true : false,
+              isMandatory: line.startsWith("-") ? true : false,
             );
           },
         ).toList();
@@ -75,14 +79,15 @@ Process processFromText(
 
   return Process(
     id: id ?? Uuid().v1(),
-    name: name,
-    description: description,
+    name: name.trim(),
+    description: description.trim(),
     isMandatory: isMandatory ?? false,
     processType: processType,
     deadline: deadline,
     timeNeeded: timeNeeded,
     group: group ?? "",
     assignedAt: DateTime.now(),
+    editAt: DateTime.now(),
     steps: newSteps,
   );
 }
