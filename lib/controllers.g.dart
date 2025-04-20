@@ -43,6 +43,38 @@ final sortedProcessProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef SortedProcessRef = AutoDisposeProviderRef<List<models.Process>>;
+String _$prefsHash() => r'72c810c81ec4e71574d451a1a915ba427ad6af98';
+
+/// See also [prefs].
+@ProviderFor(prefs)
+final prefsProvider = AutoDisposeFutureProvider<SharedPreferences>.internal(
+  prefs,
+  name: r'prefsProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$prefsHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef PrefsRef = AutoDisposeFutureProviderRef<SharedPreferences>;
+String _$dioHash() => r'e438ce1c2e57f03d8401c38c9e83aaed6689c6ca';
+
+/// See also [dio].
+@ProviderFor(dio)
+final dioProvider = AutoDisposeProvider<Dio>.internal(
+  dio,
+  name: r'dioProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$dioHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef DioRef = AutoDisposeProviderRef<Dio>;
 String _$selectedGroupsHash() => r'6399dc494adf7091112038032aa75c20799c666f';
 
 /// See also [SelectedGroups].
@@ -94,7 +126,7 @@ final processListProvider =
     );
 
 typedef _$ProcessList = AutoDisposeNotifier<List<models.Process>>;
-String _$userControllerHash() => r'27c853ba616b953a1338b142c7f7b3996c7a500d';
+String _$userControllerHash() => r'e15a7de6fb78a3dbbe6665a371c3ce7e91470632';
 
 /// See also [UserController].
 @ProviderFor(UserController)

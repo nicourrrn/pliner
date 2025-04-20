@@ -18,6 +18,7 @@ Process processFromText(
   String? group,
   bool? isMandatory,
   String? id,
+  List<Step> steps = const [],
 ]) {
   var lines = text.split("\n");
   lines = lines.map((line) => line.trim()).toList();
@@ -46,19 +47,26 @@ Process processFromText(
     name = name.replaceAll(timeNeededExp, "");
   }
 
-  var steps = <Step>[];
+  var newSteps = <Step>[];
   if (lines.length > 1) {
     description = lines
         .sublist(1)
         .where((line) => !(line.startsWith("-") || line.startsWith("+")))
         .join("\n");
-    steps =
+    newSteps =
         lines.where((line) => line.startsWith("-") || line.startsWith("+")).map(
           (line) {
-            return Step(
-              id: Uuid().v1(),
-              text: line.substring(1).trim(),
-              done: false,
+            var step = steps.firstWhere(
+              (s) => s.text == line.substring(1).trim(),
+              orElse:
+                  () => Step(
+                    id: Uuid().v1(),
+                    text: line.substring(1).trim(),
+                    done: false,
+                    isMandatory: line.startsWith("+") ? true : false,
+                  ),
+            );
+            return step.copyWith(
               isMandatory: line.startsWith("+") ? true : false,
             );
           },
@@ -75,6 +83,6 @@ Process processFromText(
     timeNeeded: timeNeeded,
     group: group ?? "",
     assignedAt: DateTime.now(),
-    steps: steps,
+    steps: newSteps,
   );
 }

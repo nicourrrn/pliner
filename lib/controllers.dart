@@ -1,11 +1,9 @@
-import 'dart:io';
-
+import "package:shared_preferences/shared_preferences.dart";
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import "package:file_picker/file_picker.dart";
-import "dart:convert";
 import "./models.dart" as models;
 import "./sources.dart";
+import "package:dio/dio.dart";
 
 part 'controllers.g.dart';
 
@@ -172,11 +170,29 @@ List<models.Process> sortedProcess(Ref ref) {
 class UserController extends _$UserController {
   @override
   models.User build() {
-    return models.User(username: "", password: "");
+    final prefs = ref
+        .watch(prefsProvider)
+        .maybeWhen(data: (d) => d, orElse: () => null);
+    final token = prefs?.getString("token") ?? "";
+    final username = prefs?.getString("username") ?? "";
+
+    return models.User(
+      username: username,
+      password: "",
+      token: token,
+      isLoggedIn: token.isNotEmpty,
+    );
   }
 
   updateUser(models.User user) {
     state = user;
+    final prefs = ref
+        .watch(prefsProvider)
+        .maybeWhen(data: (d) => d, orElse: () => null);
+    if (prefs != null) {
+      prefs.setString("token", user.token ?? "");
+      prefs.setString("username", user.username);
+    }
   }
 
   cleanUser() {
@@ -187,4 +203,20 @@ class UserController extends _$UserController {
       token: "",
     );
   }
+}
+
+@riverpod
+Future<SharedPreferences> prefs(Ref ref) async {
+  return await SharedPreferences.getInstance();
+}
+
+@riverpod
+Dio dio(Ref ref) {
+  return Dio(
+    BaseOptions(
+      baseUrl: "https://api.example.com",
+      connectTimeout: const Duration(seconds: 5),
+      receiveTimeout: const Duration(seconds: 5),
+    ),
+  );
 }

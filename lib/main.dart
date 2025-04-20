@@ -4,7 +4,7 @@ import "package:go_router/go_router.dart";
 import "./theme.dart";
 import "./screens.dart";
 
-void main() {
+main() async {
   runApp(const ProviderScope(child: MyApp()));
 }
 

@@ -40,7 +40,7 @@ class StepListView extends HookConsumerWidget {
                   }).toList();
               ref
                   .read(processListProvider.notifier)
-                  .updateProcessSteps(processId.toString(), updatedSteps);
+                  .updateProcessSteps(processId, updatedSteps);
             },
           ),
         );
