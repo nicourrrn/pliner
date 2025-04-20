@@ -25,7 +25,7 @@ class StepListView extends HookConsumerWidget {
             step.text,
             style: TextStyle(
               decoration: step.done ? TextDecoration.lineThrough : null,
-              color: step.isMendatary ? Colors.black : Colors.grey[600],
+              color: step.isMandatory ? Colors.black : Colors.grey[600],
             ),
           ),
           trailing: Checkbox(
@@ -82,7 +82,7 @@ class ProcessListTile extends HookConsumerWidget {
       child: ListTile(
         title: Text(process.name),
         subtitle: Text(process.group),
-        trailing: process.isMendatary ? Icon(Icons.upgrade) : null,
+        trailing: process.isMandatory ? Icon(Icons.upgrade) : null,
         onTap: () {
           isDesktop(context)
               ? ref.read(choosedProcessProvider.notifier).state = process.id

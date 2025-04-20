@@ -5,7 +5,7 @@ part 'models.g.dart';
 part 'models.freezed.dart';
 
 enum ProcessType {
-  parrallel("Parrallel"),
+  parallel("Parallel"),
   focus("Focus");
 
   final String name;
@@ -19,7 +19,7 @@ class Process with _$Process {
     required this.id,
     required this.name,
     required this.description,
-    required this.isMendatary,
+    required this.isMandatory,
     required this.processType,
     required this.group,
     required this.timeNeeded,
@@ -30,7 +30,7 @@ class Process with _$Process {
   final String id;
   final String name;
   final String description;
-  final bool isMendatary;
+  final bool isMandatory;
   final ProcessType processType;
   final Duration timeNeeded;
   final String group;
@@ -46,7 +46,7 @@ class Process with _$Process {
     id: Uuid().v1(),
     name: '[]',
     description: '',
-    isMendatary: false,
+    isMandatory: false,
     processType: ProcessType.focus,
     deadline: DateTime.now().add(const Duration(days: 7)),
     group: '',
@@ -63,12 +63,12 @@ class Step with _$Step {
     required this.id,
     required this.text,
     required this.done,
-    required this.isMendatary,
+    required this.isMandatory,
   });
   final String id;
   final String text;
   final bool done;
-  final bool isMendatary;
+  final bool isMandatory;
 
   factory Step.fromJson(Map<String, dynamic> json) => _$StepFromJson(json);
   Map<String, dynamic> toJson() => _$StepToJson(this);

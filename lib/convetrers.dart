@@ -8,7 +8,7 @@ String processToText(Process process) {
     text += "${process.description}\n";
   }
   for (var step in process.steps) {
-    text += "${step.isMendatary ? "+" : "-"} ${step.text}\n";
+    text += "${step.isMandatory ? "+" : "-"} ${step.text}\n";
   }
   return text;
 }
@@ -16,7 +16,7 @@ String processToText(Process process) {
 Process processFromText(
   String text, [
   String? group,
-  bool? isMendatary,
+  bool? isMandatory,
   String? id,
 ]) {
   var lines = text.split("\n");
@@ -41,7 +41,7 @@ Process processFromText(
     );
     processType =
         timeNeededExp.firstMatch(name)?.group(2) == "p"
-            ? ProcessType.parrallel
+            ? ProcessType.parallel
             : ProcessType.focus;
     name = name.replaceAll(timeNeededExp, "");
   }
@@ -59,7 +59,7 @@ Process processFromText(
               id: Uuid().v1(),
               text: line.substring(1).trim(),
               done: false,
-              isMendatary: line.startsWith("+") ? true : false,
+              isMandatory: line.startsWith("+") ? true : false,
             );
           },
         ).toList();
@@ -69,7 +69,7 @@ Process processFromText(
     id: id ?? Uuid().v1(),
     name: name,
     description: description,
-    isMendatary: isMendatary ?? false,
+    isMandatory: isMandatory ?? false,
     processType: processType,
     deadline: deadline,
     timeNeeded: timeNeeded,

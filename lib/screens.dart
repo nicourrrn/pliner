@@ -52,27 +52,6 @@ class MyHomePage extends HookConsumerWidget {
           },
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed:
-                () async =>
-                    await saveProcessesToFile(ref.read(processListProvider)),
-          ),
-          IconButton(
-            icon: const Icon(Icons.upload_file),
-            onPressed: () async => await loadProcesses(ref),
-          ),
-          if (ref.watch(userControllerProvider).isLoggedIn)
-            IconButton(
-              icon: const Icon(Icons.logout),
-              onPressed:
-                  () => ref.read(userControllerProvider.notifier).cleanUser(),
-            )
-          else
-            IconButton(
-              icon: const Icon(Icons.login),
-              onPressed: () => context.push("/user/login"),
-            ),
           if (ref.watch(selectedProcessesProvider).isNotEmpty)
             IconButton(
               icon: const Icon(Icons.delete),
@@ -82,6 +61,53 @@ class MyHomePage extends HookConsumerWidget {
                     .removeProcess(ref.watch(selectedProcessesProvider));
                 ref.read(selectedProcessesProvider.notifier).cleanState();
               },
+            ),
+
+          if (ref.watch(userControllerProvider).isLoggedIn) ...[
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () async {
+                try {
+                  await saveProcessesToServer(
+                    ref.read(userControllerProvider).username,
+                    ref.read(processListProvider),
+                  );
+                  final processes = await loadProcessFromServer(
+                    ref.read(userControllerProvider).username,
+                  );
+                  ref
+                      .read(processListProvider.notifier)
+                      .setProcesses(processes);
+                } catch (e) {
+                  debugPrint("Error: $e");
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    showDialog(
+                      context: context,
+                      builder:
+                          (context) => AlertDialog(
+                            title: const Text("Error"),
+                            content: const Text("Failed to load processes"),
+                            actions: [
+                              TextButton(
+                                onPressed: () => context.pop(),
+                                child: const Text("OK"),
+                              ),
+                            ],
+                          ),
+                    );
+                  });
+                }
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed:
+                  () => ref.read(userControllerProvider.notifier).cleanUser(),
+            ),
+          ] else
+            IconButton(
+              icon: const Icon(Icons.login),
+              onPressed: () => context.push("/user/login"),
             ),
         ],
       ),
@@ -101,17 +127,17 @@ class MyHomePage extends HookConsumerWidget {
               child: NotificationListener<ScrollNotification>(
                 onNotification: (notification) {
                   if (notification is OverscrollNotification) {
-                    heightIndicator.value -= notification.overscroll * 2;
+                    heightIndicator.value -= notification.overscroll * 0.90;
                     if (heightIndicator.value < 0) {
                       heightIndicator.value = 0;
-                    } else if (heightIndicator.value > 125) {
-                      heightIndicator.value = 125;
+                    } else if (heightIndicator.value > 100) {
+                      heightIndicator.value = 100;
                     }
                     debugPrint("heightIndicator: ${heightIndicator.value}");
                   }
 
                   if (notification is ScrollEndNotification) {
-                    if (heightIndicator.value == 125) {
+                    if (heightIndicator.value == 100) {
                       context.push("/process/create");
                     }
                     heightIndicator.value = 0;
@@ -125,7 +151,9 @@ class MyHomePage extends HookConsumerWidget {
                   itemBuilder: (context, index) {
                     if (index == 0) {
                       return AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
+                        duration: const Duration(milliseconds: 70),
+
+                        curve: Curves.easeInOut,
                         height: heightIndicator.value,
                         width: double.infinity,
                         alignment: Alignment.topCenter,
@@ -182,7 +210,7 @@ class ProcessDetailView extends HookConsumerWidget {
       ),
       body: GestureDetector(
         onVerticalDragUpdate: (details) {
-          heightIndicator.value += details.delta.dy * 2.5;
+          heightIndicator.value += details.delta.dy * 0.90;
           if (heightIndicator.value > 100) {
             heightIndicator.value = 100;
           } else if (heightIndicator.value < 0) {
@@ -201,7 +229,8 @@ class ProcessDetailView extends HookConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
+                duration: const Duration(milliseconds: 70),
+                curve: Curves.easeInOut,
                 height: heightIndicator.value,
                 width: double.infinity,
                 alignment: Alignment.topCenter,
@@ -317,7 +346,7 @@ class ProcessCreateView extends HookConsumerWidget {
                 process.value = processFromText(
                   value,
                   process.value.group,
-                  process.value.isMendatary,
+                  process.value.isMandatory,
                   process.value.id,
                 );
               },
@@ -329,26 +358,26 @@ class ProcessCreateView extends HookConsumerWidget {
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    process.value = process.value.copyWith(isMendatary: false);
+                    process.value = process.value.copyWith(isMandatory: false);
                     ref
                         .read(processListProvider.notifier)
                         .appendOrReplaceProcess(process.value);
                     saveProcessesToFile(ref.read(processListProvider));
                     context.pop();
                   },
-                  child: const Text('To not mendatary'),
+                  child: const Text('To not mendatory'),
                 ),
                 const Gap(8.0),
                 ElevatedButton(
                   onPressed: () {
-                    process.value = process.value.copyWith(isMendatary: true);
+                    process.value = process.value.copyWith(isMandatory: true);
                     ref
                         .read(processListProvider.notifier)
                         .appendOrReplaceProcess(process.value);
                     saveProcessesToFile(ref.read(processListProvider));
                     context.pop();
                   },
-                  child: const Text('To mendatary'),
+                  child: const Text('To mendatory'),
                 ),
               ],
             ),

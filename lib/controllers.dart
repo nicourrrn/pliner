@@ -95,6 +95,10 @@ class ProcessList extends _$ProcessList {
     state = await loadProcessFromFile();
   }
 
+  setProcesses(List<models.Process> processes) {
+    state = processes;
+  }
+
   updateProcessSteps(String processId, List<models.Step> steps) {
     state =
         state.map((process) {
@@ -136,8 +140,8 @@ class ProcessList extends _$ProcessList {
 List<models.Process> sortedProcess(Ref ref) {
   var processes = ref.watch(processListProvider);
   processes.sort((a, b) {
-    if (a.isMendatary && b.isMendatary) return 0;
-    if (a.isMendatary) return -1;
+    if (a.isMandatory && b.isMandatory) return 0;
+    if (a.isMandatory) return -1;
     return 1;
   });
   if (ref.watch(selectedGroupsProvider).isNotEmpty) {
@@ -162,16 +166,6 @@ List<models.Process> sortedProcess(Ref ref) {
   }
 
   return processes;
-}
-
-loadProcesses(WidgetRef ref) async {
-  final result = await FilePicker.platform.pickFiles();
-  if (result == null) return;
-  var file = jsonDecode(await File(result.files.single.path!).readAsString());
-  for (var process in file) {
-    final newProcess = models.Process.fromJson(process);
-    ref.read(processListProvider.notifier).appendProcess(newProcess);
-  }
 }
 
 @riverpod

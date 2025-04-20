@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Process {
 
- String get id; String get name; String get description; bool get isMendatary; ProcessType get processType; Duration get timeNeeded; String get group; DateTime get deadline; DateTime get assignedAt; List<Step> get steps;
+ String get id; String get name; String get description; bool get isMandatory; ProcessType get processType; Duration get timeNeeded; String get group; DateTime get deadline; DateTime get assignedAt; List<Step> get steps;
 /// Create a copy of Process
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,16 +27,16 @@ $ProcessCopyWith<Process> get copyWith => _$ProcessCopyWithImpl<Process>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Process&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.isMendatary, isMendatary) || other.isMendatary == isMendatary)&&(identical(other.processType, processType) || other.processType == processType)&&(identical(other.timeNeeded, timeNeeded) || other.timeNeeded == timeNeeded)&&(identical(other.group, group) || other.group == group)&&(identical(other.deadline, deadline) || other.deadline == deadline)&&(identical(other.assignedAt, assignedAt) || other.assignedAt == assignedAt)&&const DeepCollectionEquality().equals(other.steps, steps));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Process&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.isMandatory, isMandatory) || other.isMandatory == isMandatory)&&(identical(other.processType, processType) || other.processType == processType)&&(identical(other.timeNeeded, timeNeeded) || other.timeNeeded == timeNeeded)&&(identical(other.group, group) || other.group == group)&&(identical(other.deadline, deadline) || other.deadline == deadline)&&(identical(other.assignedAt, assignedAt) || other.assignedAt == assignedAt)&&const DeepCollectionEquality().equals(other.steps, steps));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,description,isMendatary,processType,timeNeeded,group,deadline,assignedAt,const DeepCollectionEquality().hash(steps));
+int get hashCode => Object.hash(runtimeType,id,name,description,isMandatory,processType,timeNeeded,group,deadline,assignedAt,const DeepCollectionEquality().hash(steps));
 
 @override
 String toString() {
-  return 'Process(id: $id, name: $name, description: $description, isMendatary: $isMendatary, processType: $processType, timeNeeded: $timeNeeded, group: $group, deadline: $deadline, assignedAt: $assignedAt, steps: $steps)';
+  return 'Process(id: $id, name: $name, description: $description, isMandatory: $isMandatory, processType: $processType, timeNeeded: $timeNeeded, group: $group, deadline: $deadline, assignedAt: $assignedAt, steps: $steps)';
 }
 
 
@@ -47,7 +47,7 @@ abstract mixin class $ProcessCopyWith<$Res>  {
   factory $ProcessCopyWith(Process value, $Res Function(Process) _then) = _$ProcessCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String description, bool isMendatary, ProcessType processType, String group, Duration timeNeeded, DateTime deadline, DateTime assignedAt, List<Step> steps
+ String id, String name, String description, bool isMandatory, ProcessType processType, String group, Duration timeNeeded, DateTime deadline, DateTime assignedAt, List<Step> steps
 });
 
 
@@ -64,12 +64,12 @@ class _$ProcessCopyWithImpl<$Res>
 
 /// Create a copy of Process
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? description = null,Object? isMendatary = null,Object? processType = null,Object? group = null,Object? timeNeeded = null,Object? deadline = null,Object? assignedAt = null,Object? steps = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? description = null,Object? isMandatory = null,Object? processType = null,Object? group = null,Object? timeNeeded = null,Object? deadline = null,Object? assignedAt = null,Object? steps = null,}) {
   return _then(Process(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
-as String,isMendatary: null == isMendatary ? _self.isMendatary : isMendatary // ignore: cast_nullable_to_non_nullable
+as String,isMandatory: null == isMandatory ? _self.isMandatory : isMandatory // ignore: cast_nullable_to_non_nullable
 as bool,processType: null == processType ? _self.processType : processType // ignore: cast_nullable_to_non_nullable
 as ProcessType,group: null == group ? _self.group : group // ignore: cast_nullable_to_non_nullable
 as String,timeNeeded: null == timeNeeded ? _self.timeNeeded : timeNeeded // ignore: cast_nullable_to_non_nullable
@@ -87,7 +87,7 @@ as List<Step>,
 /// @nodoc
 mixin _$Step {
 
- String get id; String get text; bool get done; bool get isMendatary;
+ String get id; String get text; bool get done; bool get isMandatory;
 /// Create a copy of Step
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -98,16 +98,16 @@ $StepCopyWith<Step> get copyWith => _$StepCopyWithImpl<Step>(this as Step, _$ide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Step&&(identical(other.id, id) || other.id == id)&&(identical(other.text, text) || other.text == text)&&(identical(other.done, done) || other.done == done)&&(identical(other.isMendatary, isMendatary) || other.isMendatary == isMendatary));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Step&&(identical(other.id, id) || other.id == id)&&(identical(other.text, text) || other.text == text)&&(identical(other.done, done) || other.done == done)&&(identical(other.isMandatory, isMandatory) || other.isMandatory == isMandatory));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,text,done,isMendatary);
+int get hashCode => Object.hash(runtimeType,id,text,done,isMandatory);
 
 @override
 String toString() {
-  return 'Step(id: $id, text: $text, done: $done, isMendatary: $isMendatary)';
+  return 'Step(id: $id, text: $text, done: $done, isMandatory: $isMandatory)';
 }
 
 
@@ -118,7 +118,7 @@ abstract mixin class $StepCopyWith<$Res>  {
   factory $StepCopyWith(Step value, $Res Function(Step) _then) = _$StepCopyWithImpl;
 @useResult
 $Res call({
- String id, String text, bool done, bool isMendatary
+ String id, String text, bool done, bool isMandatory
 });
 
 
@@ -135,12 +135,12 @@ class _$StepCopyWithImpl<$Res>
 
 /// Create a copy of Step
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? text = null,Object? done = null,Object? isMendatary = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? text = null,Object? done = null,Object? isMandatory = null,}) {
   return _then(Step(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
 as String,done: null == done ? _self.done : done // ignore: cast_nullable_to_non_nullable
-as bool,isMendatary: null == isMendatary ? _self.isMendatary : isMendatary // ignore: cast_nullable_to_non_nullable
+as bool,isMandatory: null == isMandatory ? _self.isMandatory : isMandatory // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
