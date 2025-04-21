@@ -56,10 +56,11 @@ class MyHomePage extends HookConsumerWidget {
             IconButton(
               icon: const Icon(Icons.delete),
               onPressed: () {
-                ref
-                    .read(processListProvider.notifier)
-                    .removeProcess(ref.watch(selectedProcessesProvider));
+                final toDelete = ref.read(selectedProcessesProvider);
                 ref.read(selectedProcessesProvider.notifier).cleanState();
+
+                ref.read(processListProvider.notifier).removeProcess(toDelete);
+                ref.read(deleteProcessProvider.notifier).state = toDelete;
               },
             ),
 
@@ -67,24 +68,36 @@ class MyHomePage extends HookConsumerWidget {
             IconButton(
               icon: Badge(
                 label: Text(
-                  ref.watch(newProcessesToUploadProvider).length.toString(),
+                  (ref.watch(newProcessesToUploadProvider).length +
+                          ref.watch(deleteProcessProvider).length)
+                      .toString(),
                 ),
-
+                alignment: Alignment.bottomRight,
                 child: const Icon(Icons.refresh),
               ),
               onPressed: () async {
                 try {
+                  deleteFromServer(ref);
+
                   final serverProcesses = await loadProcessFromServer(
                     ref.read(userControllerProvider).username,
+                  );
+                  debugPrint(
+                    "Process from server: ${serverProcesses.map((p) => p.name).join(", ")}",
                   );
                   final serverIdList =
                       serverProcesses.map((process) => process.id).toList();
                   final localProcesses = ref.read(processListProvider);
                   final localProcessesWithoutDeleted =
                       localProcesses
-                          .where((process) => serverIdList.contains(process.id))
+                          .where(
+                            (process) =>
+                                serverIdList.contains(process.id) &&
+                                !ref
+                                    .read(deleteProcessProvider)
+                                    .contains(process.id),
+                          )
                           .toList();
-                  debugPrint("Local processes without deleted: ");
 
                   final newestProcesses =
                       serverProcesses.map((serverProcess) {
@@ -102,11 +115,9 @@ class MyHomePage extends HookConsumerWidget {
                       }).toList() +
                       ref.read(newProcessesToUploadProvider);
 
-                  debugPrint("Newest processes: $newestProcesses");
-
                   saveProcessesToServer(
                     ref.read(userControllerProvider).username,
-                    newestProcesses,
+                    newestProcesses.where((p) => !ref.read(deleteProcessProvider).contains(p.id)).toList(),
                   );
 
                   ref
@@ -114,6 +125,7 @@ class MyHomePage extends HookConsumerWidget {
                       .setProcesses(newestProcesses);
 
                   ref.read(newProcessesToUploadProvider.notifier).state = [];
+                  ref.read(deleteProcessProvider.notifier).state = [];
                 } catch (e) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     showDialog(

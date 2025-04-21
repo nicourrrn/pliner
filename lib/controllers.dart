@@ -3,6 +3,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import "./models.dart" as models;
 import "./sources.dart";
+import "./events.dart";
 import "package:dio/dio.dart";
 import "package:sqflite/sqflite.dart";
 import "package:path_provider/path_provider.dart";
@@ -14,6 +15,8 @@ final choosedProcessProvider = StateProvider<String>((ref) => "");
 final newProcessesToUploadProvider = StateProvider<List<models.Process>>(
   (ref) => [],
 );
+
+final deleteProcessProvider = StateProvider<List<String>>((ref) => []);
 
 @riverpod
 class SelectedGroups extends _$SelectedGroups {
@@ -271,4 +274,55 @@ Future<Database> database(Ref ref) async {
       """);
     },
   );
+}
+
+@riverpod
+class EventController extends _$EventController {
+  @override
+  List<Event> build() {
+    return [];
+  }
+
+  executeEventsOnLocal() {
+    for (final event in state) {
+      if (event.executedOn.contains(ExecutedOn.local)) {
+        continue;
+      }
+      switch (event) {
+        case CreateProcessEvent(:final process):
+          ref
+              .read(processListProvider.notifier)
+              .appendOrReplaceProcess(process);
+          break;
+        case DeleteProcessEvent(:final processId):
+          ref.read(processListProvider.notifier).removeProcess([processId]);
+          break;
+        case UpdateProcessEvent(:final process):
+          ref
+              .read(processListProvider.notifier)
+              .appendOrReplaceProcess(process);
+          break;
+      }
+    }
+  }
+
+  executeEventsOnServer() {
+    final dio = ref.read(dioProvider);
+    for (final events in state) {
+      if (events.executedOn.contains(ExecutedOn.server)) {
+        continue;
+      }
+      switch (events) {
+        case CreateProcessEvent(:final process):
+          createProcessFromServer(dio, process);
+          break;
+        case DeleteProcessEvent(:final processId):
+          deleteProcessFromServer(dio, processId);
+          break;
+        case UpdateProcessEvent(:final process):
+          updateProcessFromServer(dio, process);
+          break;
+      }
+    }
+  }
 }

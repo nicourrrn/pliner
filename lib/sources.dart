@@ -8,7 +8,10 @@ import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:sqflite/sqflite.dart";
 import "./controllers.dart";
 
-const String baseUrl = "http://192.168.0.101:8000/";
+part 'sources.g.dart';
+
+// const String baseUrl = "http://192.168.0.101:8000/";
+const String baseUrl = "http://localhost:8000/";
 
 saveProcessesToFile(List<Process> processes) async {
   final directory = await getApplicationDocumentsDirectory();
@@ -84,4 +87,24 @@ saveProcessesToSqlite(WidgetRef ref) {
       }
     }
   }
+}
+
+deleteFromServer(WidgetRef ref) async {
+  final dio = Dio();
+  final processes = ref.read(deleteProcessProvider);
+  for (var process in processes) {
+    await dio.delete("${baseUrl}processes/$process");
+  }
+}
+
+createProcessFromServer(Dio dio, Process process) async {
+  await dio.post("${baseUrl}processes/", data: process.toJson());
+}
+
+deleteProcessFromServer(Dio dio, String processId) async {
+  await dio.delete("${baseUrl}processes/$processId");
+}
+
+updateProcessFromServer(Dio dio, Process process) async {
+    await dio.put("$baseUrl/processes/", data: process.toJson());
 }

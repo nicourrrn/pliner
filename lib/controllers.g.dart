@@ -159,5 +159,22 @@ final userControllerProvider =
     );
 
 typedef _$UserController = AutoDisposeNotifier<models.User>;
+String _$eventControllerHash() => r'c7d90fdd194eba2af0d33ceb39f6f7367e20d09d';
+
+/// See also [EventController].
+@ProviderFor(EventController)
+final eventControllerProvider =
+    AutoDisposeNotifierProvider<EventController, List<Event>>.internal(
+      EventController.new,
+      name: r'eventControllerProvider',
+      debugGetCreateSourceHash:
+          const bool.fromEnvironment('dart.vm.product')
+              ? null
+              : _$eventControllerHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+typedef _$EventController = AutoDisposeNotifier<List<Event>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
