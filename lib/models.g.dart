@@ -10,9 +10,9 @@ Process _$ProcessFromJson(Map<String, dynamic> json) => Process(
   id: json['id'] as String,
   name: json['name'] as String,
   description: json['description'] as String,
-  isMandatory: json['isMandatory'] as bool,
+  isMandatory: _intToBoolean((json['isMandatory'] as num).toInt()),
   processType: $enumDecode(_$ProcessTypeEnumMap, json['processType']),
-  group: json['group'] as String,
+  groupName: json['groupName'] as String,
   timeNeeded: Duration(microseconds: (json['timeNeeded'] as num).toInt()),
   deadline: DateTime.parse(json['deadline'] as String),
   assignedAt: DateTime.parse(json['assignedAt'] as String),
@@ -27,10 +27,10 @@ Map<String, dynamic> _$ProcessToJson(Process instance) => <String, dynamic>{
   'id': instance.id,
   'name': instance.name,
   'description': instance.description,
-  'isMandatory': instance.isMandatory,
+  'isMandatory': _booleanToInt(instance.isMandatory),
   'processType': _$ProcessTypeEnumMap[instance.processType]!,
   'timeNeeded': instance.timeNeeded.inMicroseconds,
-  'group': instance.group,
+  'groupName': instance.groupName,
   'deadline': instance.deadline.toIso8601String(),
   'assignedAt': instance.assignedAt.toIso8601String(),
   'steps': instance.steps,
@@ -45,15 +45,15 @@ const _$ProcessTypeEnumMap = {
 Step _$StepFromJson(Map<String, dynamic> json) => Step(
   id: json['id'] as String,
   text: json['text'] as String,
-  done: json['done'] as bool,
-  isMandatory: json['isMandatory'] as bool,
+  done: _intToBoolean((json['done'] as num).toInt()),
+  isMandatory: _intToBoolean((json['isMandatory'] as num).toInt()),
 );
 
 Map<String, dynamic> _$StepToJson(Step instance) => <String, dynamic>{
   'id': instance.id,
   'text': instance.text,
-  'done': instance.done,
-  'isMandatory': instance.isMandatory,
+  'done': _booleanToInt(instance.done),
+  'isMandatory': _booleanToInt(instance.isMandatory),
 };
 
 User _$UserFromJson(Map<String, dynamic> json) => User(

@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Process {
 
- String get id; String get name; String get description; bool get isMandatory; ProcessType get processType; Duration get timeNeeded; String get group; DateTime get deadline; DateTime get assignedAt; List<Step> get steps; DateTime get editAt;
+ String get id; String get name; String get description; bool get isMandatory; ProcessType get processType; Duration get timeNeeded; String get groupName; DateTime get deadline; DateTime get assignedAt; List<Step> get steps; DateTime get editAt;
 /// Create a copy of Process
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,16 +27,16 @@ $ProcessCopyWith<Process> get copyWith => _$ProcessCopyWithImpl<Process>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Process&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.isMandatory, isMandatory) || other.isMandatory == isMandatory)&&(identical(other.processType, processType) || other.processType == processType)&&(identical(other.timeNeeded, timeNeeded) || other.timeNeeded == timeNeeded)&&(identical(other.group, group) || other.group == group)&&(identical(other.deadline, deadline) || other.deadline == deadline)&&(identical(other.assignedAt, assignedAt) || other.assignedAt == assignedAt)&&const DeepCollectionEquality().equals(other.steps, steps)&&(identical(other.editAt, editAt) || other.editAt == editAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Process&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.isMandatory, isMandatory) || other.isMandatory == isMandatory)&&(identical(other.processType, processType) || other.processType == processType)&&(identical(other.timeNeeded, timeNeeded) || other.timeNeeded == timeNeeded)&&(identical(other.groupName, groupName) || other.groupName == groupName)&&(identical(other.deadline, deadline) || other.deadline == deadline)&&(identical(other.assignedAt, assignedAt) || other.assignedAt == assignedAt)&&const DeepCollectionEquality().equals(other.steps, steps)&&(identical(other.editAt, editAt) || other.editAt == editAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,description,isMandatory,processType,timeNeeded,group,deadline,assignedAt,const DeepCollectionEquality().hash(steps),editAt);
+int get hashCode => Object.hash(runtimeType,id,name,description,isMandatory,processType,timeNeeded,groupName,deadline,assignedAt,const DeepCollectionEquality().hash(steps),editAt);
 
 @override
 String toString() {
-  return 'Process(id: $id, name: $name, description: $description, isMandatory: $isMandatory, processType: $processType, timeNeeded: $timeNeeded, group: $group, deadline: $deadline, assignedAt: $assignedAt, steps: $steps, editAt: $editAt)';
+  return 'Process(id: $id, name: $name, description: $description, isMandatory: $isMandatory, processType: $processType, timeNeeded: $timeNeeded, groupName: $groupName, deadline: $deadline, assignedAt: $assignedAt, steps: $steps, editAt: $editAt)';
 }
 
 
@@ -47,7 +47,7 @@ abstract mixin class $ProcessCopyWith<$Res>  {
   factory $ProcessCopyWith(Process value, $Res Function(Process) _then) = _$ProcessCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String description, bool isMandatory, ProcessType processType, String group, Duration timeNeeded, DateTime deadline, DateTime assignedAt, List<Step> steps, DateTime editAt
+ String id, String name, String description, bool isMandatory, ProcessType processType, String groupName, Duration timeNeeded, DateTime deadline, DateTime assignedAt, List<Step> steps, DateTime editAt
 });
 
 
@@ -64,14 +64,14 @@ class _$ProcessCopyWithImpl<$Res>
 
 /// Create a copy of Process
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? description = null,Object? isMandatory = null,Object? processType = null,Object? group = null,Object? timeNeeded = null,Object? deadline = null,Object? assignedAt = null,Object? steps = null,Object? editAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? description = null,Object? isMandatory = null,Object? processType = null,Object? groupName = null,Object? timeNeeded = null,Object? deadline = null,Object? assignedAt = null,Object? steps = null,Object? editAt = null,}) {
   return _then(Process(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String,isMandatory: null == isMandatory ? _self.isMandatory : isMandatory // ignore: cast_nullable_to_non_nullable
 as bool,processType: null == processType ? _self.processType : processType // ignore: cast_nullable_to_non_nullable
-as ProcessType,group: null == group ? _self.group : group // ignore: cast_nullable_to_non_nullable
+as ProcessType,groupName: null == groupName ? _self.groupName : groupName // ignore: cast_nullable_to_non_nullable
 as String,timeNeeded: null == timeNeeded ? _self.timeNeeded : timeNeeded // ignore: cast_nullable_to_non_nullable
 as Duration,deadline: null == deadline ? _self.deadline : deadline // ignore: cast_nullable_to_non_nullable
 as DateTime,assignedAt: null == assignedAt ? _self.assignedAt : assignedAt // ignore: cast_nullable_to_non_nullable

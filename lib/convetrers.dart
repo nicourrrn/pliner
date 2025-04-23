@@ -85,7 +85,7 @@ Process processFromText(
     processType: processType,
     deadline: deadline,
     timeNeeded: timeNeeded,
-    group: group ?? "",
+    groupName: group ?? "",
     assignedAt: DateTime.now(),
     editAt: DateTime.now(),
     steps: newSteps,

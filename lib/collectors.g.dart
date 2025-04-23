@@ -6,6 +6,26 @@ part of 'collectors.dart';
 // RiverpodGenerator
 // **************************************************************************
 
+String _$databaseProcessListHash() =>
+    r'34e116521a222cbe22fc8270abc9df503596245c';
+
+/// See also [databaseProcessList].
+@ProviderFor(databaseProcessList)
+final databaseProcessListProvider =
+    AutoDisposeFutureProvider<List<Process>>.internal(
+      databaseProcessList,
+      name: r'databaseProcessListProvider',
+      debugGetCreateSourceHash:
+          const bool.fromEnvironment('dart.vm.product')
+              ? null
+              : _$databaseProcessListHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef DatabaseProcessListRef = AutoDisposeFutureProviderRef<List<Process>>;
 String _$processesToUploadHash() => r'44cf1f271ac81c342adf959cbb0b3e8b3e89f416';
 
 /// See also [processesToUpload].
@@ -24,7 +44,7 @@ final processesToUploadProvider = AutoDisposeProvider<int>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef ProcessesToUploadRef = AutoDisposeProviderRef<int>;
-String _$processGroupsListHash() => r'f2e7a3f2e7cc9601270919ac417f61b3f4b56321';
+String _$processGroupsListHash() => r'1fb4b58be06a19b0e86094dc009c7f84b118ffb0';
 
 /// See also [processGroupsList].
 @ProviderFor(processGroupsList)
@@ -42,7 +62,7 @@ final processGroupsListProvider = AutoDisposeProvider<List<String>>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef ProcessGroupsListRef = AutoDisposeProviderRef<List<String>>;
-String _$sortedProcessHash() => r'c7995ce1f5aa937ce5f1c89420655055c801f52d';
+String _$sortedProcessHash() => r'8ef918b53541f92dd3fc303ce0ddd01cdc70eccc';
 
 /// See also [sortedProcess].
 @ProviderFor(sortedProcess)

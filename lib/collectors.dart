@@ -3,8 +3,18 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import "./events.dart";
 import './controllers.dart';
 import "./models.dart";
+import "./sources.dart";
 
 part "collectors.g.dart";
+
+@riverpod
+Future<List<Process>> databaseProcessList(Ref ref) async {
+  final db = await ref.watch(databaseProvider.future);
+  print("Database loaded");
+  final processes = await loadProcessesFromSqlite(db);
+  print("Processes loaded from database ${processes.length}");
+  return processes;
+}
 
 @riverpod
 int processesToUpload(Ref ref) {
@@ -18,7 +28,7 @@ int processesToUpload(Ref ref) {
 List<String> processGroupsList(Ref ref) {
   return ref
       .watch(processListProvider)
-      .map((process) => process.group)
+      .map((process) => process.groupName)
       .toSet()
       .toList();
 }
@@ -36,7 +46,7 @@ List<Process> sortedProcess(Ref ref) {
   if (selectedGroups.isNotEmpty) {
     processes =
         processes
-            .where((process) => selectedGroups.contains(process.group))
+            .where((process) => selectedGroups.contains(process.groupName))
             .toList();
   }
 

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import "package:flutter_hooks/flutter_hooks.dart";
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import "package:go_router/go_router.dart";
 import "./theme.dart";
 import "./screens.dart";
+import "./collectors.dart";
+import "./controllers.dart";
+import "./models.dart";
 
 main() async {
   runApp(const ProviderScope(child: MyApp()));
@@ -52,6 +56,21 @@ class MyApp extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final processAsync = ref.watch(databaseProcessListProvider);
+
+    useEffect(() {
+      final sub = ref.listenManual<AsyncValue<List<Process>>>(
+        databaseProcessListProvider,
+        (previous, next) {
+          next.whenData((processes) {
+            ref.read(processListProvider.notifier).setProcesses(processes);
+            debugPrint("Processes loaded from database ${processes.length}");
+          });
+        },
+      );
+      return sub.close;
+    }, []);
+
     return MaterialApp.router(
       title: 'Task manager',
       theme: isDesktop(context) ? desctopTheme : mobileTheme,

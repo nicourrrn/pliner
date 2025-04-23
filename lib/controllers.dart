@@ -1,3 +1,4 @@
+import "package:flutter/widgets.dart";
 import "package:shared_preferences/shared_preferences.dart";
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -5,7 +6,9 @@ import "./models.dart" as models;
 import "./sources.dart";
 import "./events.dart";
 import "package:dio/dio.dart";
-import "package:sqflite/sqflite.dart";
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import "package:path_provider/path_provider.dart";
 import "./collectors.dart";
 
@@ -56,7 +59,6 @@ class SelectedProcesses extends _$SelectedProcesses {
 class ProcessList extends _$ProcessList {
   @override
   List<models.Process> build() {
-    _loadProcesses();
     ref.listen<List<Event>>(eventControllerProvider, (prev, events) {
       for (final event in events) {
         _handleEvent(event);
@@ -84,21 +86,8 @@ class ProcessList extends _$ProcessList {
     }
   }
 
-  _loadProcesses() async {
-    var processes = await loadProcessFromFile();
-    processes =
-        processes
-            .map(
-              (process) => process.copyWith(
-                steps: {for (final s in process.steps) s.id: s}.values.toList(),
-              ),
-            )
-            .toList();
-
-    state = [...state, ...processes];
-  }
-
   setProcesses(List<models.Process> processes) {
+    debugPrint("Processes set");
     state = processes;
   }
 
@@ -194,6 +183,12 @@ Dio dio(Ref ref) {
 @riverpod
 Future<Database> database(Ref ref) async {
   final directory = await getApplicationDocumentsDirectory();
+
+  if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+
   return openDatabase(
     "${directory.path}/processes.db",
     version: 1,
@@ -206,7 +201,7 @@ Future<Database> database(Ref ref) async {
                 isMandatory BOOLEAN,
                 processType TEXT,
                 timeNeeded INTEGER,
-                group_name TEXT,
+                groupName TEXT,
                 deadline TEXT,
                 assignedAt TEXT,
                 owner TEXT,
@@ -220,7 +215,7 @@ Future<Database> database(Ref ref) async {
                 text TEXT,
                 done BOOLEAN,
                 isMandatory BOOLEAN,
-                process_id TEXT,
+                processId TEXT,
                 FOREIGN KEY (process_id) REFERENCES processes (id)
             )
       """);
@@ -237,5 +232,9 @@ class EventController extends _$EventController {
 
   addEvent(Event event) {
     state = [...state, event];
+  }
+
+  cleanEvents() {
+    state = [];
   }
 }

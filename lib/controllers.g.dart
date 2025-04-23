@@ -38,7 +38,7 @@ final dioProvider = AutoDisposeProvider<Dio>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef DioRef = AutoDisposeProviderRef<Dio>;
-String _$databaseHash() => r'5b617b7287a9aa079742ff29ab99cfb63e73165e';
+String _$databaseHash() => r'009765a1931fa2bf9bc5c6f5e8b4eb804ea071a7';
 
 /// See also [database].
 @ProviderFor(database)
@@ -88,7 +88,7 @@ final selectedProcessesProvider =
     );
 
 typedef _$SelectedProcesses = AutoDisposeNotifier<List<String>>;
-String _$processListHash() => r'6a2b0cbd8d7de4a9d0c8b502d79545a4bf81a0cc';
+String _$processListHash() => r'c79fe3c31d269ba62a31d8c4cfb344865c4c33c1';
 
 /// See also [ProcessList].
 @ProviderFor(ProcessList)
@@ -122,7 +122,7 @@ final userControllerProvider =
     );
 
 typedef _$UserController = AutoDisposeNotifier<models.User>;
-String _$eventControllerHash() => r'ed5a494f737cabb8c988d9a6e636a99fb2ef8669';
+String _$eventControllerHash() => r'ab5aa024441dfcdf62ce8d1d559feb918df47e81';
 
 /// See also [EventController].
 @ProviderFor(EventController)

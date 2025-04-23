@@ -7,14 +7,17 @@ import "./controllers.dart";
 part 'watchers.g.dart';
 
 @riverpod
-syncEventsWithDatabase(Ref ref) {
-  final db = ref.read(databaseProvider).value;
+syncEventsWithDatabase(Ref ref) async {
+  final db = await ref.read(databaseProvider.future);
+  print("Syncing events with database");
   ref.listen<List<Event>>(eventControllerProvider, (prev, next) {
-    if (db == null) return;
     for (final event in next) {
+      print("Event: $event");
       if (event.executedOn.contains(ExecutedOn.local)) {
+        print("Continue");
         continue;
       }
+
       switch (event) {
         case CreateProcessEvent(:final process):
           createProcessFromSqlite(db, process);

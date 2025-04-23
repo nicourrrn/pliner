@@ -106,8 +106,10 @@ class MyHomePage extends HookConsumerWidget {
                         break;
                     }
                   }
+                  ref.read(eventControllerProvider.notifier).cleanEvents();
 
                   final serverProcesses = await loadProcessFromServer(
+                    dio,
                     ref.read(userControllerProvider).username,
                   );
 
@@ -115,26 +117,34 @@ class MyHomePage extends HookConsumerWidget {
                     eventControllerProvider.notifier,
                   );
 
+                  final deletedProcessIDs =
+                      events
+                          .whereType<DeleteProcessEvent>()
+                          .map((de) => de.processId)
+                          .toList();
+
                   for (final serverProcess in serverProcesses) {
-                    final toDelete = events
-                        .whereType<DeleteProcessEvent>()
-                        .map((de) => de.processId)
-                        .contains(serverProcess.id);
-                    if (toDelete) continue;
+                    if (deletedProcessIDs.contains(serverProcess.id)) continue;
                     try {
                       final localProcess = ref
                           .read(processListProvider)
                           .firstWhere((l) => serverProcess == l);
                       if (localProcess.editAt.isBefore(serverProcess.editAt)) {
                         eventNotifier.addEvent(
-                          UpdateProcessEvent(serverProcess),
+                          UpdateProcessEvent(
+                            serverProcess,
+                            executedOn: [ExecutedOn.server],
+                          ),
                         );
                       }
                     } catch (e) {
-                      eventNotifier.addEvent(CreateProcessEvent(serverProcess));
-                      debugPrint(
-                        "Process ${serverProcess.id} not found in local storage",
+                      eventNotifier.addEvent(
+                        CreateProcessEvent(
+                          serverProcess,
+                          executedOn: [ExecutedOn.server],
+                        ),
                       );
+                      debugPrint("Process ${serverProcess.id} not found");
                     }
                   }
                 } catch (e) {
@@ -316,7 +326,7 @@ class ProcessDetailView extends HookConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(process.group),
+                  Text(process.groupName),
                   Text(
                     'Assigned At: ${formatDate(process.assignedAt, [yy, '-', mm, '-', dd])}',
                   ),
@@ -370,7 +380,7 @@ class ProcessCreateView extends HookConsumerWidget {
                     .toList();
               },
               onSelected: (value) {
-                process.value = process.value.copyWith(group: value);
+                process.value = process.value.copyWith(groupName: value);
               },
               fieldViewBuilder: (
                 context,
@@ -378,14 +388,14 @@ class ProcessCreateView extends HookConsumerWidget {
                 focusNode,
                 onFieldSubmitted,
               ) {
-                textEditingController.text = process.value.group;
+                textEditingController.text = process.value.groupName;
 
                 return TextField(
                   controller: textEditingController,
                   focusNode: focusNode,
                   decoration: const InputDecoration(labelText: 'Group'),
                   onChanged: (value) {
-                    process.value = process.value.copyWith(group: value);
+                    process.value = process.value.copyWith(groupName: value);
                   },
                 );
               },
@@ -397,7 +407,7 @@ class ProcessCreateView extends HookConsumerWidget {
               onChanged: (value) {
                 process.value = processFromText(
                   value,
-                  process.value.group,
+                  process.value.groupName,
                   process.value.isMandatory,
                   process.value.id,
                   process.value.steps,

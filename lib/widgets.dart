@@ -85,7 +85,7 @@ class ProcessListTile extends HookConsumerWidget {
       ),
       child: ListTile(
         title: Text(process.name),
-        subtitle: Text(process.group),
+        subtitle: Text(process.groupName),
         trailing: process.isMandatory ? Icon(Icons.upgrade) : null,
         onTap: () {
           ref.read(choosedProcessProvider.notifier).state = process.id;

@@ -12,6 +12,9 @@ enum ProcessType {
   const ProcessType(this.name);
 }
 
+int _booleanToInt(bool value) => value ? 1 : 0;
+bool _intToBoolean(int value) => value == 1;
+
 @freezed
 @JsonSerializable()
 class Process with _$Process {
@@ -21,7 +24,7 @@ class Process with _$Process {
     required this.description,
     required this.isMandatory,
     required this.processType,
-    required this.group,
+    required this.groupName,
     required this.timeNeeded,
     required this.deadline,
     required this.assignedAt,
@@ -31,10 +34,11 @@ class Process with _$Process {
   final String id;
   final String name;
   final String description;
+  @JsonKey(fromJson: _intToBoolean, toJson: _booleanToInt)
   final bool isMandatory;
   final ProcessType processType;
   final Duration timeNeeded;
-  final String group;
+  final String groupName;
   final DateTime deadline;
   final DateTime assignedAt;
   final List<Step> steps;
@@ -51,7 +55,7 @@ class Process with _$Process {
     isMandatory: false,
     processType: ProcessType.focus,
     deadline: DateTime.now().add(const Duration(days: 7)),
-    group: '',
+    groupName: '',
     timeNeeded: const Duration(hours: 3),
     assignedAt: DateTime.now(),
     steps: [],
@@ -70,7 +74,9 @@ class Step with _$Step {
   });
   final String id;
   final String text;
+  @JsonKey(fromJson: _intToBoolean, toJson: _booleanToInt)
   final bool done;
+  @JsonKey(fromJson: _intToBoolean, toJson: _booleanToInt)
   final bool isMandatory;
 
   factory Step.fromJson(Map<String, dynamic> json) => _$StepFromJson(json);
