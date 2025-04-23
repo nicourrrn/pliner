@@ -10,11 +10,15 @@ import "./theme.dart";
 import "./convetrers.dart";
 import "./controllers.dart";
 import "./widgets.dart";
+import "./watchers.dart";
+import "./events.dart";
+import "./collectors.dart";
 
 class MyDesktopHomePage extends HookConsumerWidget {
   const MyDesktopHomePage({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.read(syncEventsWithDatabaseProvider);
     final choosedProcess = ref.watch(choosedProcessProvider);
     return Scaffold(
       body: Row(
@@ -57,75 +61,82 @@ class MyHomePage extends HookConsumerWidget {
               icon: const Icon(Icons.delete),
               onPressed: () {
                 final toDelete = ref.read(selectedProcessesProvider);
+                for (final process in toDelete) {
+                  ref
+                      .read(eventControllerProvider.notifier)
+                      .addEvent(Event.deleteProcess(process));
+                }
                 ref.read(selectedProcessesProvider.notifier).cleanState();
-
-                ref.read(processListProvider.notifier).removeProcess(toDelete);
-                ref.read(deleteProcessProvider.notifier).state = toDelete;
               },
             ),
 
           if (ref.watch(userControllerProvider).isLoggedIn) ...[
             IconButton(
               icon: Badge(
-                label: Text(
-                  (ref.watch(newProcessesToUploadProvider).length +
-                          ref.watch(deleteProcessProvider).length)
-                      .toString(),
-                ),
+                label: Text(ref.watch(processesToUploadProvider).toString()),
                 alignment: Alignment.bottomRight,
                 child: const Icon(Icons.refresh),
               ),
               onPressed: () async {
                 try {
-                  deleteFromServer(ref);
+                  final dio = ref.read(dioProvider);
+                  final events = ref.read(eventControllerProvider);
+
+                  for (final event in events) {
+                    if (event.executedOn.contains(ExecutedOn.server)) {
+                      continue;
+                    }
+
+                    switch (event) {
+                      case CreateProcessEvent(:final process):
+                        final owner = ref.read(userControllerProvider).username;
+                        createProcessFromServer(dio, process, owner);
+                        break;
+                      case DeleteProcessEvent(:final processId):
+                        deleteProcessFromServer(dio, processId);
+                        break;
+                      case UpdateProcessEvent(:final process):
+                        updateProcessFromServer(dio, process);
+                        break;
+                      case UpdateProcessStepsEvent(
+                        :final processId,
+                        :final steps,
+                      ):
+                        updateProcessStepsFromServer(dio, processId, steps);
+                        break;
+                    }
+                  }
 
                   final serverProcesses = await loadProcessFromServer(
                     ref.read(userControllerProvider).username,
                   );
-                  debugPrint(
-                    "Process from server: ${serverProcesses.map((p) => p.name).join(", ")}",
-                  );
-                  final serverIdList =
-                      serverProcesses.map((process) => process.id).toList();
-                  final localProcesses = ref.read(processListProvider);
-                  final localProcessesWithoutDeleted =
-                      localProcesses
-                          .where(
-                            (process) =>
-                                serverIdList.contains(process.id) &&
-                                !ref
-                                    .read(deleteProcessProvider)
-                                    .contains(process.id),
-                          )
-                          .toList();
 
-                  final newestProcesses =
-                      serverProcesses.map((serverProcess) {
-                        final localProcess = localProcessesWithoutDeleted
-                            .firstWhere(
-                              (p) => p.id == serverProcess.id,
-                              orElse:
-                                  () => Process.zero().copyWith(
-                                    editAt: DateTime(1970),
-                                  ),
-                            );
-                        return localProcess.editAt.isAfter(serverProcess.editAt)
-                            ? localProcess
-                            : serverProcess;
-                      }).toList() +
-                      ref.read(newProcessesToUploadProvider);
-
-                  saveProcessesToServer(
-                    ref.read(userControllerProvider).username,
-                    newestProcesses.where((p) => !ref.read(deleteProcessProvider).contains(p.id)).toList(),
+                  final eventNotifier = ref.read(
+                    eventControllerProvider.notifier,
                   );
 
-                  ref
-                      .read(processListProvider.notifier)
-                      .setProcesses(newestProcesses);
-
-                  ref.read(newProcessesToUploadProvider.notifier).state = [];
-                  ref.read(deleteProcessProvider.notifier).state = [];
+                  for (final serverProcess in serverProcesses) {
+                    final toDelete = events
+                        .whereType<DeleteProcessEvent>()
+                        .map((de) => de.processId)
+                        .contains(serverProcess.id);
+                    if (toDelete) continue;
+                    try {
+                      final localProcess = ref
+                          .read(processListProvider)
+                          .firstWhere((l) => serverProcess == l);
+                      if (localProcess.editAt.isBefore(serverProcess.editAt)) {
+                        eventNotifier.addEvent(
+                          UpdateProcessEvent(serverProcess),
+                        );
+                      }
+                    } catch (e) {
+                      eventNotifier.addEvent(CreateProcessEvent(serverProcess));
+                      debugPrint(
+                        "Process ${serverProcess.id} not found in local storage",
+                      );
+                    }
+                  }
                 } catch (e) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     showDialog(
@@ -217,7 +228,6 @@ class MyHomePage extends HookConsumerWidget {
                 ),
               ),
             ),
-
             GroupChips(),
           ],
         ),
@@ -405,15 +415,12 @@ class ProcessCreateView extends HookConsumerWidget {
                       isMandatory: false,
                       editAt: DateTime.now(),
                     );
-                    ref
-                        .read(processListProvider.notifier)
-                        .appendOrReplaceProcess(process.value);
-                    saveProcessesToFile(ref.read(processListProvider));
-                    saveProcessesToSqlite(ref);
-                    ref.read(newProcessesToUploadProvider.notifier).state = [
-                      ...ref.read(newProcessesToUploadProvider),
-                      process.value,
-                    ];
+                    final event =
+                        (processId != null)
+                            ? Event.updateProcess(process.value)
+                            : Event.createProcess(process.value);
+                    ref.read(eventControllerProvider.notifier).addEvent(event);
+
                     context.pop();
                   },
                   child: const Text('To not mendatory'),
@@ -425,15 +432,12 @@ class ProcessCreateView extends HookConsumerWidget {
                       isMandatory: true,
                       editAt: DateTime.now(),
                     );
-                    ref
-                        .read(processListProvider.notifier)
-                        .appendOrReplaceProcess(process.value);
-                    saveProcessesToFile(ref.read(processListProvider));
-                    saveProcessesToSqlite(ref);
-                    ref.read(newProcessesToUploadProvider.notifier).state = [
-                      ...ref.read(newProcessesToUploadProvider),
-                      process.value,
-                    ];
+                    final event =
+                        (processId != null)
+                            ? Event.updateProcess(process.value)
+                            : Event.createProcess(process.value);
+                    ref.read(eventControllerProvider.notifier).addEvent(event);
+
                     context.pop();
                   },
                   child: const Text('To mendatory'),

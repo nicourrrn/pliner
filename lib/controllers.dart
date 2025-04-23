@@ -7,23 +7,17 @@ import "./events.dart";
 import "package:dio/dio.dart";
 import "package:sqflite/sqflite.dart";
 import "package:path_provider/path_provider.dart";
+import "./collectors.dart";
 
 part 'controllers.g.dart';
 
 final processNameFilterProvider = StateProvider<String>((ref) => "");
 final choosedProcessProvider = StateProvider<String>((ref) => "");
-final newProcessesToUploadProvider = StateProvider<List<models.Process>>(
-  (ref) => [],
-);
-
-final deleteProcessProvider = StateProvider<List<String>>((ref) => []);
 
 @riverpod
 class SelectedGroups extends _$SelectedGroups {
   @override
-  List<String> build() {
-    return [];
-  }
+  List<String> build() => [];
 
   deleteRemovedGroups() {
     final groups = ref.read(processGroupsListProvider);
@@ -38,26 +32,12 @@ class SelectedGroups extends _$SelectedGroups {
       state = [...state, group];
     }
   }
-
-  addGroup(String group) {
-    state = [...state, group];
-  }
-
-  removeGroup(String group) {
-    state = state.where((g) => g != group).toList();
-  }
-
-  cleanState() {
-    state = [];
-  }
 }
 
 @riverpod
 class SelectedProcesses extends _$SelectedProcesses {
   @override
-  List<String> build() {
-    return [];
-  }
+  List<String> build() => [];
 
   toggleProcess(String processId) {
     if (state.contains(processId)) {
@@ -67,26 +47,9 @@ class SelectedProcesses extends _$SelectedProcesses {
     }
   }
 
-  addProcess(String processId) {
-    state = [...state, processId];
-  }
-
-  removeProcess(String processId) {
-    state = state.where((id) => id != processId).toList();
-  }
-
   cleanState() {
     state = [];
   }
-}
-
-@riverpod
-List<String> processGroupsList(Ref ref) {
-  return ref
-      .watch(processListProvider)
-      .map((process) => process.group)
-      .toSet()
-      .toList();
 }
 
 @riverpod
@@ -94,7 +57,31 @@ class ProcessList extends _$ProcessList {
   @override
   List<models.Process> build() {
     _loadProcesses();
+    ref.listen<List<Event>>(eventControllerProvider, (prev, events) {
+      for (final event in events) {
+        _handleEvent(event);
+      }
+    });
     return [];
+  }
+
+  _handleEvent(Event event) {
+    if (event.executedOn.contains(ExecutedOn.local)) return;
+
+    switch (event) {
+      case CreateProcessEvent(:final process):
+        appendProcess(process);
+        break;
+      case DeleteProcessEvent(:final processId):
+        removeProcess([processId]);
+        break;
+      case UpdateProcessEvent(:final process):
+        appendOrReplaceProcess(process);
+        break;
+      case UpdateProcessStepsEvent(:final processId, :final steps):
+        updateProcessSteps(processId, steps);
+        break;
+    }
   }
 
   _loadProcesses() async {
@@ -108,7 +95,7 @@ class ProcessList extends _$ProcessList {
             )
             .toList();
 
-    state = processes;
+    state = [...state, ...processes];
   }
 
   setProcesses(List<models.Process> processes) {
@@ -117,12 +104,14 @@ class ProcessList extends _$ProcessList {
 
   updateProcessSteps(String processId, List<models.Step> steps) {
     state =
-        state.map((process) {
-          if (process.id == processId) {
-            return process.copyWith(steps: steps);
-          }
-          return process;
-        }).toList();
+        state
+            .map(
+              (process) =>
+                  (process.id == processId)
+                      ? process.copyWith(steps: steps)
+                      : process,
+            )
+            .toList();
   }
 
   appendProcess(models.Process process) {
@@ -130,7 +119,7 @@ class ProcessList extends _$ProcessList {
   }
 
   appendOrReplaceProcess(models.Process process) {
-    if (state.any((p) => p.id == process.id)) {
+    if (state.contains(process)) {
       var processToReplace = state.firstWhere((p) => p.id == process.id);
       var newSteps =
           process.steps.map((p) {
@@ -143,45 +132,13 @@ class ProcessList extends _$ProcessList {
           }).toList();
       process = process.copyWith(steps: newSteps);
     }
-    state = state.where((p) => p.id != process.id).toList();
-    state = [...state, process];
+    final newState = state.where((p) => p.id != process.id).toList();
+    state = [...newState, process];
   }
 
   removeProcess(List<String> processIds) {
     state = state.where((process) => !processIds.contains(process.id)).toList();
   }
-}
-
-@riverpod
-List<models.Process> sortedProcess(Ref ref) {
-  var processes = ref.watch(processListProvider);
-  processes.sort((a, b) {
-    if (a.isMandatory && b.isMandatory) return 0;
-    if (a.isMandatory) return -1;
-    return 1;
-  });
-  if (ref.watch(selectedGroupsProvider).isNotEmpty) {
-    processes =
-        processes
-            .where(
-              (process) =>
-                  ref.watch(selectedGroupsProvider).contains(process.group),
-            )
-            .toList();
-  }
-
-  if (ref.watch(processNameFilterProvider).isNotEmpty) {
-    processes =
-        processes
-            .where(
-              (process) => process.name.toLowerCase().contains(
-                ref.watch(processNameFilterProvider).toLowerCase(),
-              ),
-            )
-            .toList();
-  }
-
-  return processes;
 }
 
 @riverpod
@@ -214,12 +171,7 @@ class UserController extends _$UserController {
   }
 
   cleanUser() {
-    state = models.User(
-      username: "",
-      password: "",
-      isLoggedIn: false,
-      token: "",
-    );
+    state = models.User.empty();
   }
 }
 
@@ -283,46 +235,7 @@ class EventController extends _$EventController {
     return [];
   }
 
-  executeEventsOnLocal() {
-    for (final event in state) {
-      if (event.executedOn.contains(ExecutedOn.local)) {
-        continue;
-      }
-      switch (event) {
-        case CreateProcessEvent(:final process):
-          ref
-              .read(processListProvider.notifier)
-              .appendOrReplaceProcess(process);
-          break;
-        case DeleteProcessEvent(:final processId):
-          ref.read(processListProvider.notifier).removeProcess([processId]);
-          break;
-        case UpdateProcessEvent(:final process):
-          ref
-              .read(processListProvider.notifier)
-              .appendOrReplaceProcess(process);
-          break;
-      }
-    }
-  }
-
-  executeEventsOnServer() {
-    final dio = ref.read(dioProvider);
-    for (final events in state) {
-      if (events.executedOn.contains(ExecutedOn.server)) {
-        continue;
-      }
-      switch (events) {
-        case CreateProcessEvent(:final process):
-          createProcessFromServer(dio, process);
-          break;
-        case DeleteProcessEvent(:final processId):
-          deleteProcessFromServer(dio, processId);
-          break;
-        case UpdateProcessEvent(:final process):
-          updateProcessFromServer(dio, process);
-          break;
-      }
-    }
+  addEvent(Event event) {
+    state = [...state, event];
   }
 }

@@ -4,6 +4,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import "package:go_router/go_router.dart";
 import "./controllers.dart";
 import "./theme.dart";
+import "./events.dart";
+import "./collectors.dart";
 
 class StepListView extends HookConsumerWidget {
   const StepListView({super.key, required this.processId});
@@ -11,18 +13,21 @@ class StepListView extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final eventNotifier = ref.read(eventControllerProvider.notifier);
+
     final steps =
         ref
             .watch(processListProvider)
             .firstWhere((process) => process.id == processId)
             .steps;
+
     return ListView.builder(
       itemCount: steps.length,
       itemBuilder: (context, index) {
         final step = steps[index];
         return ListTile(
           title: Text(
-            "${step.text} ${step.id.substring(0, 8)}",
+            step.text,
             style: TextStyle(
               decoration: step.done ? TextDecoration.lineThrough : null,
               color: step.isMandatory ? Colors.black : Colors.grey[600],
@@ -33,14 +38,13 @@ class StepListView extends HookConsumerWidget {
             onChanged: (value) {
               final updatedSteps =
                   steps.map((s) {
-                    if (s.id == step.id) {
-                      return s.copyWith(done: value!);
-                    }
+                    if (s.id == step.id) return s.copyWith(done: value!);
                     return s;
                   }).toList();
-              ref
-                  .read(processListProvider.notifier)
-                  .updateProcessSteps(processId, updatedSteps);
+
+              eventNotifier.addEvent(
+                Event.updateProcessSteps(processId, updatedSteps),
+              );
             },
           ),
         );
@@ -58,14 +62,14 @@ class ProcessListTile extends HookConsumerWidget {
     final process = ref
         .watch(processListProvider)
         .firstWhere((process) => process.id == processId);
+
     final selectedProcesses = ref.watch(selectedProcessesProvider);
     final color = useState(Colors.grey[100]);
 
-    if (selectedProcesses.contains(processId)) {
-      color.value = Colors.red[400];
-    } else {
-      color.value = Colors.grey[100];
-    }
+    color.value =
+        selectedProcesses.contains(processId)
+            ? Colors.red[400]
+            : Colors.grey[100];
 
     return Container(
       decoration: BoxDecoration(
@@ -84,9 +88,8 @@ class ProcessListTile extends HookConsumerWidget {
         subtitle: Text(process.group),
         trailing: process.isMandatory ? Icon(Icons.upgrade) : null,
         onTap: () {
-          isDesktop(context)
-              ? ref.read(choosedProcessProvider.notifier).state = process.id
-              : context.push("/process/${process.id}");
+          ref.read(choosedProcessProvider.notifier).state = process.id;
+          if (!isDesktop(context)) context.push("/process/${process.id}");
         },
         tileColor: color.value,
 
@@ -106,6 +109,7 @@ class GroupChips extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedGroups = ref.watch(selectedGroupsProvider);
+    final selectedGroupsNotifier = ref.read(selectedGroupsProvider.notifier);
     final processGroups = ref.watch(processGroupsListProvider);
 
     return Padding(
@@ -120,9 +124,7 @@ class GroupChips extends HookConsumerWidget {
                     label: Text(group),
                     selected: selectedGroups.contains(group),
                     onSelected:
-                        (value) => ref
-                            .read(selectedGroupsProvider.notifier)
-                            .toggleGroup(group),
+                        (value) => selectedGroupsNotifier.toggleGroup(group),
                   ),
                 )
                 .toList(),

@@ -1,0 +1,55 @@
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import "./events.dart";
+import './controllers.dart';
+import "./models.dart";
+
+part "collectors.g.dart";
+
+@riverpod
+int processesToUpload(Ref ref) {
+  return ref
+      .watch(eventControllerProvider)
+      .where((p) => !p.executedOn.contains(ExecutedOn.server))
+      .length;
+}
+
+@riverpod
+List<String> processGroupsList(Ref ref) {
+  return ref
+      .watch(processListProvider)
+      .map((process) => process.group)
+      .toSet()
+      .toList();
+}
+
+@riverpod
+List<Process> sortedProcess(Ref ref) {
+  var processes = ref.watch(processListProvider);
+  processes.sort((a, b) {
+    if (a.isMandatory && b.isMandatory) return 0;
+    if (a.isMandatory) return -1;
+    return 1;
+  });
+
+  final selectedGroups = ref.watch(selectedGroupsProvider);
+  if (selectedGroups.isNotEmpty) {
+    processes =
+        processes
+            .where((process) => selectedGroups.contains(process.group))
+            .toList();
+  }
+
+  final nameFilter = ref.watch(processNameFilterProvider);
+  if (nameFilter.isNotEmpty) {
+    processes =
+        processes
+            .where(
+              (process) =>
+                  process.name.toLowerCase().contains(nameFilter.toLowerCase()),
+            )
+            .toList();
+  }
+
+  return processes;
+}

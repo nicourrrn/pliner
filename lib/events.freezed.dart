@@ -28,6 +28,10 @@ Event _$EventFromJson(
           return UpdateProcessEvent.fromJson(
             json
           );
+                case 'updateProcessSteps':
+          return UpdateProcessStepsEvent.fromJson(
+            json
+          );
         
           default:
             throw CheckedFromJsonException(
@@ -107,12 +111,12 @@ as List<ExecutedOn>,
 @JsonSerializable()
 
 class CreateProcessEvent implements Event {
-   CreateProcessEvent(this.process, final  List<ExecutedOn> executedOn, {final  String? $type}): _executedOn = executedOn,$type = $type ?? 'createProcess';
+   CreateProcessEvent(this.process, {final  List<ExecutedOn> executedOn = const [], final  String? $type}): _executedOn = executedOn,$type = $type ?? 'createProcess';
   factory CreateProcessEvent.fromJson(Map<String, dynamic> json) => _$CreateProcessEventFromJson(json);
 
  final  Process process;
  final  List<ExecutedOn> _executedOn;
-@override List<ExecutedOn> get executedOn {
+@override@JsonKey() List<ExecutedOn> get executedOn {
   if (_executedOn is EqualUnmodifiableListView) return _executedOn;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_executedOn);
@@ -176,7 +180,7 @@ class _$CreateProcessEventCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? process = null,Object? executedOn = null,}) {
   return _then(CreateProcessEvent(
 null == process ? _self.process : process // ignore: cast_nullable_to_non_nullable
-as Process,null == executedOn ? _self._executedOn : executedOn // ignore: cast_nullable_to_non_nullable
+as Process,executedOn: null == executedOn ? _self._executedOn : executedOn // ignore: cast_nullable_to_non_nullable
 as List<ExecutedOn>,
   ));
 }
@@ -197,12 +201,12 @@ $ProcessCopyWith<$Res> get process {
 @JsonSerializable()
 
 class DeleteProcessEvent implements Event {
-   DeleteProcessEvent(this.processId, final  List<ExecutedOn> executedOn, {final  String? $type}): _executedOn = executedOn,$type = $type ?? 'deleteProcess';
+   DeleteProcessEvent(this.processId, {final  List<ExecutedOn> executedOn = const [], final  String? $type}): _executedOn = executedOn,$type = $type ?? 'deleteProcess';
   factory DeleteProcessEvent.fromJson(Map<String, dynamic> json) => _$DeleteProcessEventFromJson(json);
 
  final  String processId;
  final  List<ExecutedOn> _executedOn;
-@override List<ExecutedOn> get executedOn {
+@override@JsonKey() List<ExecutedOn> get executedOn {
   if (_executedOn is EqualUnmodifiableListView) return _executedOn;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_executedOn);
@@ -266,7 +270,7 @@ class _$DeleteProcessEventCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? processId = null,Object? executedOn = null,}) {
   return _then(DeleteProcessEvent(
 null == processId ? _self.processId : processId // ignore: cast_nullable_to_non_nullable
-as String,null == executedOn ? _self._executedOn : executedOn // ignore: cast_nullable_to_non_nullable
+as String,executedOn: null == executedOn ? _self._executedOn : executedOn // ignore: cast_nullable_to_non_nullable
 as List<ExecutedOn>,
   ));
 }
@@ -278,12 +282,12 @@ as List<ExecutedOn>,
 @JsonSerializable()
 
 class UpdateProcessEvent implements Event {
-   UpdateProcessEvent(this.process, final  List<ExecutedOn> executedOn, {final  String? $type}): _executedOn = executedOn,$type = $type ?? 'updateProcess';
+   UpdateProcessEvent(this.process, {final  List<ExecutedOn> executedOn = const [], final  String? $type}): _executedOn = executedOn,$type = $type ?? 'updateProcess';
   factory UpdateProcessEvent.fromJson(Map<String, dynamic> json) => _$UpdateProcessEventFromJson(json);
 
  final  Process process;
  final  List<ExecutedOn> _executedOn;
-@override List<ExecutedOn> get executedOn {
+@override@JsonKey() List<ExecutedOn> get executedOn {
   if (_executedOn is EqualUnmodifiableListView) return _executedOn;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_executedOn);
@@ -347,7 +351,7 @@ class _$UpdateProcessEventCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? process = null,Object? executedOn = null,}) {
   return _then(UpdateProcessEvent(
 null == process ? _self.process : process // ignore: cast_nullable_to_non_nullable
-as Process,null == executedOn ? _self._executedOn : executedOn // ignore: cast_nullable_to_non_nullable
+as Process,executedOn: null == executedOn ? _self._executedOn : executedOn // ignore: cast_nullable_to_non_nullable
 as List<ExecutedOn>,
   ));
 }
@@ -362,6 +366,95 @@ $ProcessCopyWith<$Res> get process {
     return _then(_self.copyWith(process: value));
   });
 }
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class UpdateProcessStepsEvent implements Event {
+   UpdateProcessStepsEvent(this.processId, final  List<Step> steps, {final  List<ExecutedOn> executedOn = const [], final  String? $type}): _steps = steps,_executedOn = executedOn,$type = $type ?? 'updateProcessSteps';
+  factory UpdateProcessStepsEvent.fromJson(Map<String, dynamic> json) => _$UpdateProcessStepsEventFromJson(json);
+
+ final  String processId;
+ final  List<Step> _steps;
+ List<Step> get steps {
+  if (_steps is EqualUnmodifiableListView) return _steps;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_steps);
+}
+
+ final  List<ExecutedOn> _executedOn;
+@override@JsonKey() List<ExecutedOn> get executedOn {
+  if (_executedOn is EqualUnmodifiableListView) return _executedOn;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_executedOn);
+}
+
+
+@JsonKey(name: 'runtimeType')
+final String $type;
+
+
+/// Create a copy of Event
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$UpdateProcessStepsEventCopyWith<UpdateProcessStepsEvent> get copyWith => _$UpdateProcessStepsEventCopyWithImpl<UpdateProcessStepsEvent>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$UpdateProcessStepsEventToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UpdateProcessStepsEvent&&(identical(other.processId, processId) || other.processId == processId)&&const DeepCollectionEquality().equals(other._steps, _steps)&&const DeepCollectionEquality().equals(other._executedOn, _executedOn));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,processId,const DeepCollectionEquality().hash(_steps),const DeepCollectionEquality().hash(_executedOn));
+
+@override
+String toString() {
+  return 'Event.updateProcessSteps(processId: $processId, steps: $steps, executedOn: $executedOn)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $UpdateProcessStepsEventCopyWith<$Res> implements $EventCopyWith<$Res> {
+  factory $UpdateProcessStepsEventCopyWith(UpdateProcessStepsEvent value, $Res Function(UpdateProcessStepsEvent) _then) = _$UpdateProcessStepsEventCopyWithImpl;
+@override @useResult
+$Res call({
+ String processId, List<Step> steps, List<ExecutedOn> executedOn
+});
+
+
+
+
+}
+/// @nodoc
+class _$UpdateProcessStepsEventCopyWithImpl<$Res>
+    implements $UpdateProcessStepsEventCopyWith<$Res> {
+  _$UpdateProcessStepsEventCopyWithImpl(this._self, this._then);
+
+  final UpdateProcessStepsEvent _self;
+  final $Res Function(UpdateProcessStepsEvent) _then;
+
+/// Create a copy of Event
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? processId = null,Object? steps = null,Object? executedOn = null,}) {
+  return _then(UpdateProcessStepsEvent(
+null == processId ? _self.processId : processId // ignore: cast_nullable_to_non_nullable
+as String,null == steps ? _self._steps : steps // ignore: cast_nullable_to_non_nullable
+as List<Step>,executedOn: null == executedOn ? _self._executedOn : executedOn // ignore: cast_nullable_to_non_nullable
+as List<ExecutedOn>,
+  ));
+}
+
+
 }
 
 // dart format on

@@ -6,43 +6,6 @@ part of 'controllers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$processGroupsListHash() => r'f2e7a3f2e7cc9601270919ac417f61b3f4b56321';
-
-/// See also [processGroupsList].
-@ProviderFor(processGroupsList)
-final processGroupsListProvider = AutoDisposeProvider<List<String>>.internal(
-  processGroupsList,
-  name: r'processGroupsListProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$processGroupsListHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef ProcessGroupsListRef = AutoDisposeProviderRef<List<String>>;
-String _$sortedProcessHash() => r'c633b6f8e4c9b17e50861bf85951d06e0e25912c';
-
-/// See also [sortedProcess].
-@ProviderFor(sortedProcess)
-final sortedProcessProvider =
-    AutoDisposeProvider<List<models.Process>>.internal(
-      sortedProcess,
-      name: r'sortedProcessProvider',
-      debugGetCreateSourceHash:
-          const bool.fromEnvironment('dart.vm.product')
-              ? null
-              : _$sortedProcessHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef SortedProcessRef = AutoDisposeProviderRef<List<models.Process>>;
 String _$prefsHash() => r'72c810c81ec4e71574d451a1a915ba427ad6af98';
 
 /// See also [prefs].
@@ -91,7 +54,7 @@ final databaseProvider = AutoDisposeFutureProvider<Database>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef DatabaseRef = AutoDisposeFutureProviderRef<Database>;
-String _$selectedGroupsHash() => r'6399dc494adf7091112038032aa75c20799c666f';
+String _$selectedGroupsHash() => r'838db0373ca9aef6c5ef094477ad43ba02ab707d';
 
 /// See also [SelectedGroups].
 @ProviderFor(SelectedGroups)
@@ -108,7 +71,7 @@ final selectedGroupsProvider =
     );
 
 typedef _$SelectedGroups = AutoDisposeNotifier<List<String>>;
-String _$selectedProcessesHash() => r'cadd3de7acc6d21e06eeb35cd2741bfa739100b5';
+String _$selectedProcessesHash() => r'96e257f82d599b349240ec9d9dffbc9a61496091';
 
 /// See also [SelectedProcesses].
 @ProviderFor(SelectedProcesses)
@@ -125,7 +88,7 @@ final selectedProcessesProvider =
     );
 
 typedef _$SelectedProcesses = AutoDisposeNotifier<List<String>>;
-String _$processListHash() => r'08b16fc4b9e441d6360980a46241bece2975af33';
+String _$processListHash() => r'6a2b0cbd8d7de4a9d0c8b502d79545a4bf81a0cc';
 
 /// See also [ProcessList].
 @ProviderFor(ProcessList)
@@ -142,7 +105,7 @@ final processListProvider =
     );
 
 typedef _$ProcessList = AutoDisposeNotifier<List<models.Process>>;
-String _$userControllerHash() => r'443c988272100d1f7ccf14b05b70de9f0e03ebfa';
+String _$userControllerHash() => r'c19d1f0a72d2c64615c771caa61bd15de1f36305';
 
 /// See also [UserController].
 @ProviderFor(UserController)
@@ -159,7 +122,7 @@ final userControllerProvider =
     );
 
 typedef _$UserController = AutoDisposeNotifier<models.User>;
-String _$eventControllerHash() => r'c7d90fdd194eba2af0d33ceb39f6f7367e20d09d';
+String _$eventControllerHash() => r'ed5a494f737cabb8c988d9a6e636a99fb2ef8669';
 
 /// See also [EventController].
 @ProviderFor(EventController)

@@ -89,16 +89,12 @@ saveProcessesToSqlite(WidgetRef ref) {
   }
 }
 
-deleteFromServer(WidgetRef ref) async {
-  final dio = Dio();
-  final processes = ref.read(deleteProcessProvider);
-  for (var process in processes) {
-    await dio.delete("${baseUrl}processes/$process");
-  }
-}
-
-createProcessFromServer(Dio dio, Process process) async {
-  await dio.post("${baseUrl}processes/", data: process.toJson());
+createProcessFromServer(Dio dio, Process process, String owner) async {
+  await dio.post(
+    "${baseUrl}processes/",
+    data: process.toJson(),
+    queryParameters: {"owner": owner},
+  );
 }
 
 deleteProcessFromServer(Dio dio, String processId) async {
@@ -106,5 +102,54 @@ deleteProcessFromServer(Dio dio, String processId) async {
 }
 
 updateProcessFromServer(Dio dio, Process process) async {
-    await dio.put("$baseUrl/processes/", data: process.toJson());
+  await dio.put("$baseUrl/processes/", data: process.toJson());
+}
+
+updateProcessStepsFromServer(
+  Dio dio,
+  String processId,
+  List<Step> steps,
+) async {
+  await dio.put(
+    "$baseUrl/processes/$processId/steps",
+    data: steps.map((s) => s.toJson()).toList(),
+  );
+}
+
+createProcessFromSqlite(Database db, Process process) {
+  db.insert(
+    'processes',
+    process.toJson(),
+    conflictAlgorithm: ConflictAlgorithm.replace,
+  );
+  for (var step in process.steps) {
+    db.insert(
+      'steps',
+      step.toJson(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+}
+
+deleteProcessFromSqlite(Database db, String processId) {
+  db.delete('processes', where: 'id = ?', whereArgs: [processId]);
+  db.delete('steps', where: 'processId = ?', whereArgs: [processId]);
+}
+
+updateProcessFromSqlite(Database db, Process process) {
+  db.update(
+    'processes',
+    process.toJson(),
+    where: 'id = ?',
+    whereArgs: [process.id],
+  );
+  for (var step in process.steps) {
+    db.update('steps', step.toJson(), where: 'id = ?', whereArgs: [step.id]);
+  }
+}
+
+updateProcessStepsFromSqlite(Database db, String processId, List<Step> steps) {
+  for (var step in steps) {
+    db.update('steps', step.toJson(), where: 'id = ?', whereArgs: [step.id]);
+  }
 }
