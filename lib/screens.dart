@@ -18,7 +18,6 @@ class MyDesktopHomePage extends HookConsumerWidget {
   const MyDesktopHomePage({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.read(syncEventsWithDatabaseProvider);
     final choosedProcess = ref.watch(choosedProcessProvider);
     return Scaffold(
       body: Row(

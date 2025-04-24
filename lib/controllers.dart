@@ -1,9 +1,7 @@
-import "package:flutter/widgets.dart";
 import "package:shared_preferences/shared_preferences.dart";
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import "./models.dart" as models;
-import "./sources.dart";
 import "./events.dart";
 import "package:dio/dio.dart";
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -205,20 +203,19 @@ Future<Database> database(Ref ref) async {
                 deadline TEXT,
                 assignedAt TEXT,
                 owner TEXT,
-                editAt TEXT,
-                FOREIGN KEY (owner) REFERENCES users (username)
+                editAt TEXT
             )
             """);
       db.execute("""
             CREATE TABLE IF NOT EXISTS steps (
                 id TEXT PRIMARY KEY,
                 text TEXT,
-                done BOOLEAN,
-                isMandatory BOOLEAN,
+                done INTEGER,
+                isMandatory INTEGER,
                 processId TEXT,
-                FOREIGN KEY (process_id) REFERENCES processes (id)
-            )
-      """);
+                FOREIGN KEY (processId) REFERENCES processes (id)
+                )
+        """);
     },
   );
 }

@@ -7,7 +7,8 @@ import "package:sqflite/sqflite.dart";
 import "./models.dart";
 
 // const String baseUrl = "http://192.168.0.101:8000/";
-const String baseUrl = "http://localhost:8000/";
+// const String baseUrl = "http://localhost:8000/";
+const String baseUrl = "http://10.100.162.126:8000/";
 
 saveProcessesToFile(List<Process> processes) async {
   final directory = await getApplicationDocumentsDirectory();
