@@ -9,12 +9,9 @@ part 'watchers.g.dart';
 @riverpod
 syncEventsWithDatabase(Ref ref) async {
   final db = await ref.read(databaseProvider.future);
-  print("Syncing events with database");
   ref.listen<List<Event>>(eventControllerProvider, (prev, next) {
     for (final event in next) {
-      print("Event: $event");
       if (event.executedOn.contains(ExecutedOn.local)) {
-        print("Continue");
         continue;
       }
 

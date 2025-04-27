@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import "package:go_router/go_router.dart";
+import "package:url_launcher/url_launcher.dart";
 import "./controllers.dart";
 import "./theme.dart";
 import "./events.dart";
@@ -86,13 +87,24 @@ class ProcessListTile extends HookConsumerWidget {
       child: ListTile(
         title: Text(process.name),
         subtitle: Text(process.groupName),
-        trailing: process.isMandatory ? Icon(Icons.upgrade) : null,
+        leading:
+            process.isMandatory
+                ? const Icon(Icons.priority_high, color: Colors.red)
+                : const Icon(Icons.check_circle_outline),
+        trailing: Text(
+          process.deadline.difference(DateTime.now()).inDays.toString(),
+        ),
         onTap: () {
-          ref.read(choosedProcessProvider.notifier).state = process.id;
-          if (!isDesktop(context)) context.push("/process/${process.id}");
+          if (selectedProcesses.isNotEmpty) {
+            ref
+                .read(selectedProcessesProvider.notifier)
+                .toggleProcess(process.id);
+          } else {
+            ref.read(choosedProcessProvider.notifier).state = process.id;
+            if (!isDesktop(context)) context.push("/process/${process.id}");
+          }
         },
         tileColor: color.value,
-
         onLongPress: () {
           ref
               .read(selectedProcessesProvider.notifier)
@@ -129,6 +141,24 @@ class GroupChips extends HookConsumerWidget {
                 )
                 .toList(),
       ),
+    );
+  }
+}
+
+class UpdateAppButton extends HookConsumerWidget {
+  const UpdateAppButton({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final baseUrl = ref.watch(baseUrlProvider);
+
+    return IconButton(
+      onPressed: () async {
+        final url = Uri.parse("${baseUrl}application/android/app");
+        await launchUrl(url);
+      },
+      tooltip: "Update App",
+      icon: const Icon(Icons.update),
     );
   }
 }

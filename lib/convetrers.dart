@@ -69,7 +69,6 @@ Process processFromText(
                     isMandatory: line.startsWith("-") ? true : false,
                   ),
             );
-            print("step: $step coied");
             return step.copyWith(
               isMandatory: line.startsWith("-") ? true : false,
             );

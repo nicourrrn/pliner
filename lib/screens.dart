@@ -10,7 +10,6 @@ import "./theme.dart";
 import "./convetrers.dart";
 import "./controllers.dart";
 import "./widgets.dart";
-import "./watchers.dart";
 import "./events.dart";
 import "./collectors.dart";
 
@@ -55,6 +54,7 @@ class MyHomePage extends HookConsumerWidget {
           },
         ),
         actions: [
+          UpdateAppButton(),
           if (ref.watch(selectedProcessesProvider).isNotEmpty)
             IconButton(
               icon: const Icon(Icons.delete),
@@ -71,6 +71,7 @@ class MyHomePage extends HookConsumerWidget {
 
           if (ref.watch(userControllerProvider).isLoggedIn) ...[
             IconButton(
+              tooltip: "Sync",
               icon: Badge(
                 label: Text(ref.watch(processesToUploadProvider).toString()),
                 alignment: Alignment.bottomRight,
@@ -143,7 +144,6 @@ class MyHomePage extends HookConsumerWidget {
                           executedOn: [ExecutedOn.server],
                         ),
                       );
-                      debugPrint("Process ${serverProcess.id} not found");
                     }
                   }
                 } catch (e) {
@@ -169,9 +169,8 @@ class MyHomePage extends HookConsumerWidget {
               },
             ),
             IconButton(
-              icon: const Icon(Icons.logout),
-              onPressed:
-                  () => ref.read(userControllerProvider.notifier).cleanUser(),
+              icon: const Icon(Icons.settings),
+              onPressed: () => context.push("/user"),
             ),
           ] else
             IconButton(
@@ -220,7 +219,6 @@ class MyHomePage extends HookConsumerWidget {
                     if (index == 0) {
                       return AnimatedContainer(
                         duration: const Duration(milliseconds: 70),
-
                         curve: Curves.easeInOut,
                         height: heightIndicator.value,
                         width: double.infinity,
@@ -316,8 +314,8 @@ class ProcessDetailView extends HookConsumerWidget {
               SizedBox(
                 width: double.infinity,
                 child: SelectableText(
-                  process.description,
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  "${process.description}\nDeadline: ${formatDate(process.deadline, [yyyy, '-', mm, '-', dd])}",
+                  style: Theme.of(context).textTheme.bodyLarge,
                 ),
               ),
               const Gap(16),
@@ -352,8 +350,6 @@ class ProcessCreateView extends HookConsumerWidget {
             : ref
                 .watch(processListProvider)
                 .firstWhere((process) => process.id == processId);
-    debugPrint("Base process: $baseProcess");
-
     final process = useState(baseProcess);
 
     final textEditingController = useTextEditingController(
@@ -500,6 +496,51 @@ class LoginScreen extends HookConsumerWidget {
                 context.pop();
               },
               child: const Text('Login'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class SettingScreen extends HookConsumerWidget {
+  const SettingScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final baseUrlNotify = ref.read(baseUrlProvider.notifier);
+    final textEditingController = useTextEditingController(
+      text: ref.read(baseUrlProvider),
+    );
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Setting"),
+        actions: [
+          IconButton(
+            onPressed:
+                () => ref.read(userControllerProvider.notifier).cleanUser(),
+            icon: const Icon(Icons.logout),
+          ),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              ref.watch(userControllerProvider).username,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const Gap(16.0),
+            TextField(
+              controller: textEditingController,
+              decoration: const InputDecoration(labelText: 'Base URL'),
+              onChanged: (value) {
+                baseUrlNotify.state = value;
+              },
             ),
           ],
         ),

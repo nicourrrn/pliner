@@ -10,9 +10,7 @@ part "collectors.g.dart";
 @riverpod
 Future<List<Process>> databaseProcessList(Ref ref) async {
   final db = await ref.watch(databaseProvider.future);
-  print("Database loaded");
   final processes = await loadProcessesFromSqlite(db);
-  print("Processes loaded from database ${processes.length}");
   return processes;
 }
 

@@ -22,7 +22,7 @@ final prefsProvider = AutoDisposeFutureProvider<SharedPreferences>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PrefsRef = AutoDisposeFutureProviderRef<SharedPreferences>;
-String _$dioHash() => r'e438ce1c2e57f03d8401c38c9e83aaed6689c6ca';
+String _$dioHash() => r'a06d1377a94b2f002d97e4eaf859403db029a7f4';
 
 /// See also [dio].
 @ProviderFor(dio)
@@ -54,6 +54,22 @@ final databaseProvider = AutoDisposeFutureProvider<Database>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef DatabaseRef = AutoDisposeFutureProviderRef<Database>;
+String _$deadlinesHash() => r'2e86e5f9634aa55c07a73c9b2aea453c756a88db';
+
+/// See also [deadlines].
+@ProviderFor(deadlines)
+final deadlinesProvider = AutoDisposeProvider<List<DateTime>>.internal(
+  deadlines,
+  name: r'deadlinesProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$deadlinesHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef DeadlinesRef = AutoDisposeProviderRef<List<DateTime>>;
 String _$selectedGroupsHash() => r'838db0373ca9aef6c5ef094477ad43ba02ab707d';
 
 /// See also [SelectedGroups].
@@ -88,7 +104,7 @@ final selectedProcessesProvider =
     );
 
 typedef _$SelectedProcesses = AutoDisposeNotifier<List<String>>;
-String _$processListHash() => r'c79fe3c31d269ba62a31d8c4cfb344865c4c33c1';
+String _$processListHash() => r'3815ae2b233296274eb8f7528c298a1e07958e87';
 
 /// See also [ProcessList].
 @ProviderFor(ProcessList)

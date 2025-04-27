@@ -6,10 +6,6 @@ import "package:sqflite/sqflite.dart";
 
 import "./models.dart";
 
-// const String baseUrl = "http://192.168.0.101:8000/";
-// const String baseUrl = "http://localhost:8000/";
-const String baseUrl = "http://10.100.162.126:8000/";
-
 saveProcessesToFile(List<Process> processes) async {
   final directory = await getApplicationDocumentsDirectory();
   final file = File('${directory.path}/processes.json');
@@ -34,25 +30,25 @@ Future<List<Process>> loadProcessFromFile() async {
 }
 
 Future<List<Process>> loadProcessFromServer(Dio dio, String username) async {
-  final resp = await dio.get("${baseUrl}processes/user/$username");
+  final resp = await dio.get("processes/user/$username");
   final List<dynamic> jsonList = resp.data;
   return jsonList.map((json) => Process.fromJson(json)).toList();
 }
 
 createProcessFromServer(Dio dio, Process process, String owner) async {
   await dio.post(
-    "${baseUrl}processes/",
+    "processes/",
     data: process.toJson(),
     queryParameters: {"owner": owner},
   );
 }
 
 deleteProcessFromServer(Dio dio, String processId) async {
-  await dio.delete("${baseUrl}processes/$processId");
+  await dio.delete("processes/$processId");
 }
 
 updateProcessFromServer(Dio dio, Process process) async {
-  await dio.put("$baseUrl/processes/", data: process.toJson());
+  await dio.put("processes/", data: process.toJson());
 }
 
 updateProcessStepsFromServer(
@@ -61,7 +57,7 @@ updateProcessStepsFromServer(
   List<Step> steps,
 ) async {
   await dio.put(
-    "$baseUrl/processes/$processId/steps",
+    "processes/$processId/steps",
     data: steps.map((s) => s.toJson()).toList(),
   );
 }
@@ -70,7 +66,7 @@ Future<List<Process>> loadProcessesFromSqlite(Database db) async {
   final rawProcesses = await db.query('processes');
   var processes = [];
   for (final rawProcess in rawProcesses) {
-    final process = Map<String, dynamic>.from(rawProcess);
+    var process = Map<String, dynamic>.from(rawProcess);
     process['steps'] = await db.query(
       'steps',
       where: 'processId = ?',
@@ -90,11 +86,9 @@ createProcessFromSqlite(Database db, Process process) {
     conflictAlgorithm: ConflictAlgorithm.replace,
   );
   for (var step in process.steps) {
-    db.insert(
-      'steps',
-      step.toJson(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    var stepJson = step.toJson();
+    stepJson["processId"] = process.id;
+    db.insert('steps', stepJson, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 }
 

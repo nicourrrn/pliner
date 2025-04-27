@@ -7,7 +7,7 @@ part of 'collectors.dart';
 // **************************************************************************
 
 String _$databaseProcessListHash() =>
-    r'34e116521a222cbe22fc8270abc9df503596245c';
+    r'a0a2f55dd069a661b51922ffb280f65ed30e1484';
 
 /// See also [databaseProcessList].
 @ProviderFor(databaseProcessList)

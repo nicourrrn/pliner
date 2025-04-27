@@ -48,6 +48,10 @@ final _routerProvider = Provider<GoRouter>(
         path: "/user/login",
         builder: (context, state) => const LoginScreen(),
       ),
+      GoRoute(
+        path: "/user",
+        builder: (context, state) => const SettingScreen(),
+      ),
     ],
   ),
 );
@@ -64,10 +68,10 @@ class MyApp extends HookConsumerWidget {
       final sub = ref.listenManual<AsyncValue<List<Process>>>(
         databaseProcessListProvider,
         (previous, next) {
-          next.whenData((processes) {
-            ref.read(processListProvider.notifier).setProcesses(processes);
-            debugPrint("Processes loaded from database ${processes.length}");
-          });
+          next.whenData(
+            (processes) =>
+                ref.read(processListProvider.notifier).setProcesses(processes),
+          );
         },
       );
       return sub.close;

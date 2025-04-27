@@ -1,17 +1,20 @@
+import 'dart:io';
 import "package:shared_preferences/shared_preferences.dart";
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import "./models.dart" as models;
-import "./events.dart";
 import "package:dio/dio.dart";
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import "package:path_provider/path_provider.dart";
 import "./collectors.dart";
+import "./models.dart" as models;
+import "./events.dart";
 
 part 'controllers.g.dart';
 
+const String _baseUrl = "http://192.168.0.103:8000/";
+
+final baseUrlProvider = StateProvider<String>((ref) => _baseUrl);
 final processNameFilterProvider = StateProvider<String>((ref) => "");
 final choosedProcessProvider = StateProvider<String>((ref) => "");
 
@@ -85,7 +88,6 @@ class ProcessList extends _$ProcessList {
   }
 
   setProcesses(List<models.Process> processes) {
-    debugPrint("Processes set");
     state = processes;
   }
 
@@ -102,6 +104,9 @@ class ProcessList extends _$ProcessList {
   }
 
   appendProcess(models.Process process) {
+    if (state.any((p) => p.id == process.id)) {
+      state = state.where((p) => p.id != process.id).toList();
+    }
     state = [...state, process];
   }
 
@@ -169,11 +174,12 @@ Future<SharedPreferences> prefs(Ref ref) async {
 
 @riverpod
 Dio dio(Ref ref) {
+  final baseUrl = ref.watch(baseUrlProvider);
   return Dio(
     BaseOptions(
-      baseUrl: "https://api.example.com",
-      connectTimeout: const Duration(seconds: 5),
-      receiveTimeout: const Duration(seconds: 5),
+      baseUrl: baseUrl,
+      connectTimeout: const Duration(seconds: 3),
+      receiveTimeout: const Duration(seconds: 3),
     ),
   );
 }
@@ -234,4 +240,10 @@ class EventController extends _$EventController {
   cleanEvents() {
     state = [];
   }
+}
+
+@riverpod
+List<DateTime> deadlines(Ref ref) {
+  final processList = ref.watch(processListProvider);
+  return processList.map((process) => process.deadline).toList();
 }
