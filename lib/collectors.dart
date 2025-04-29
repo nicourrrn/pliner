@@ -1,6 +1,6 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import "./events.dart";
+import "package:collection/collection.dart";
 import './controllers.dart';
 import "./models.dart";
 import "./sources.dart";
@@ -28,33 +28,50 @@ List<String> processGroupsList(Ref ref) {
       .toList();
 }
 
+enum SortBy { name, deadline, group }
+
+final sortByProvider = StateProvider<SortBy>((ref) => SortBy.deadline);
+
+List<Process> filterByName(List<Process> processes, String nameFilter) {
+  if (nameFilter.isEmpty) return processes;
+  return processes
+      .where(
+        (process) =>
+            process.name.toLowerCase().contains(nameFilter.toLowerCase()),
+      )
+      .toList();
+}
+
+List<Process> filterByGroup(
+  List<Process> processes,
+  List<String> selectedGroups,
+) {
+  if (selectedGroups.isEmpty) return processes;
+  return processes
+      .where((process) => selectedGroups.contains(process.groupName))
+      .toList();
+}
+
+List<Process> sortProcesses(List<Process> processes, SortBy sortBy) {
+  switch (sortBy) {
+    case SortBy.name:
+      return processes.sorted((a, b) => a.name.compareTo(b.name));
+    case SortBy.deadline:
+      return processes.sorted((a, b) => a.deadline.compareTo(b.deadline));
+    case SortBy.group:
+      return processes.sorted((a, b) => a.groupName.compareTo(b.groupName));
+  }
+}
+
 @riverpod
 List<Process> sortedProcess(Ref ref) {
-  var processes = ref.watch(processListProvider);
-  processes.sort((a, b) {
-    if (a.isMandatory && b.isMandatory) return 0;
-    if (a.isMandatory) return -1;
-    return 1;
-  });
-
+  final processes = ref.watch(processListProvider);
+  final sortBy = ref.watch(sortByProvider);
   final selectedGroups = ref.watch(selectedGroupsProvider);
-  if (selectedGroups.isNotEmpty) {
-    processes =
-        processes
-            .where((process) => selectedGroups.contains(process.groupName))
-            .toList();
-  }
-
   final nameFilter = ref.watch(processNameFilterProvider);
-  if (nameFilter.isNotEmpty) {
-    processes =
-        processes
-            .where(
-              (process) =>
-                  process.name.toLowerCase().contains(nameFilter.toLowerCase()),
-            )
-            .toList();
-  }
 
-  return processes;
+  return sortProcesses(
+    filterByName(filterByGroup(processes, selectedGroups), nameFilter),
+    sortBy,
+  );
 }

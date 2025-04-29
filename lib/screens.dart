@@ -42,14 +42,39 @@ class MyHomePage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final heightIndicator = useState(0.0);
+    final searchFocusNode = useFocusNode();
+    final searchActive = useState(false);
+
+    useEffect(() {
+      listener() {
+        searchActive.value =
+            searchFocusNode.hasFocus ? true : searchActive.value;
+      }
+
+      FocusManager.instance.addListener(listener);
+      return () => FocusManager.instance.removeListener(listener);
+    }, [searchFocusNode]);
 
     return Scaffold(
       appBar: AppBar(
+        leading:
+            searchActive.value
+                ? IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () {
+                    if (searchActive.value) {
+                      searchActive.value = false;
+                      searchFocusNode.unfocus();
+                    }
+                  },
+                )
+                : null,
         title: TextField(
           decoration: const InputDecoration(
             hintText: "Search",
             border: InputBorder.none,
           ),
+          focusNode: searchFocusNode,
           onChanged: (value) {
             ref.read(processNameFilterProvider.notifier).state = value;
           },
@@ -150,6 +175,39 @@ class MyHomePage extends HookConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
+            if (searchActive.value)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                width: double.infinity,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Sort by"),
+                    Wrap(
+                      spacing: 8.0,
+                      runSpacing: 8.0,
+                      children: [
+                        FilterChip(
+                          label: const Text("Name"),
+                          onSelected: (value) {
+                            ref.read(sortByProvider.notifier).state =
+                                SortBy.name;
+                          },
+                        ),
+                        FilterChip(
+                          label: const Text("Deadline"),
+                          onSelected: (value) {
+                            ref.read(sortByProvider.notifier).state =
+                                SortBy.deadline;
+                          },
+                        ),
+                      ],
+                    ),
+                    const Text("Group"),
+                    GroupChips(),
+                  ],
+                ),
+              ),
             if (isDesktop(context)) ...[
               const Gap(8.0),
               OutlinedButton(
@@ -202,7 +260,6 @@ class MyHomePage extends HookConsumerWidget {
                 ),
               ),
             ),
-            GroupChips(),
           ],
         ),
       ),
@@ -333,15 +390,35 @@ class ProcessCreateView extends HookConsumerWidget {
     final textEditingController = useTextEditingController(
       text: processToText(process.value),
     );
+    final lastLinesCount = useState(0);
     useEffect(() {
       textEditingController.selection = TextSelection.fromPosition(
         TextPosition(offset: baseProcess.name.indexOf("]")),
       );
+      lastLinesCount.value = textEditingController.text.split("\n").length;
       return null;
     }, []);
 
     useEffect(() {
-      listener() {}
+      listener() {
+        final lines = textEditingController.text.split("\n");
+        final text = textEditingController.text;
+        final isNewLine = text.endsWith("\n");
+        final previousTextIsStep = lines[lines.length - 2].trim().startsWith(
+          "-",
+        );
+        if (lines.length == lastLinesCount.value + 1 &&
+            isNewLine &&
+            previousTextIsStep) {
+          final newText = "$text- ";
+          textEditingController.value = TextEditingValue(
+            text: newText,
+            selection: TextSelection.collapsed(offset: newText.length),
+          );
+        }
+
+        lastLinesCount.value = lines.length;
+      }
 
       textEditingController.addListener(listener);
 

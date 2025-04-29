@@ -27,7 +27,7 @@ class StepListView extends HookConsumerWidget {
       itemBuilder: (context, index) {
         final step = steps[index];
         return ListTile(
-          title: Text(
+          title: SelectableText(
             step.text,
             style: TextStyle(
               decoration: step.done ? TextDecoration.lineThrough : null,
@@ -124,23 +124,20 @@ class GroupChips extends HookConsumerWidget {
     final selectedGroupsNotifier = ref.read(selectedGroupsProvider.notifier);
     final processGroups = ref.watch(processGroupsListProvider);
 
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Wrap(
-        spacing: 8.0,
-        runSpacing: 8.0,
-        children:
-            processGroups
-                .map(
-                  (group) => FilterChip(
-                    label: Text(group),
-                    selected: selectedGroups.contains(group),
-                    onSelected:
-                        (value) => selectedGroupsNotifier.toggleGroup(group),
-                  ),
-                )
-                .toList(),
-      ),
+    return Wrap(
+      spacing: 8.0,
+      runSpacing: 8.0,
+      children:
+          processGroups
+              .map(
+                (group) => FilterChip(
+                  label: Text(group),
+                  selected: selectedGroups.contains(group),
+                  onSelected:
+                      (value) => selectedGroupsNotifier.toggleGroup(group),
+                ),
+              )
+              .toList(),
     );
   }
 }
