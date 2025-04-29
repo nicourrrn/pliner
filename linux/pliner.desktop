@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Pliner
+Exec=pliner
+Icon=pliner
+Comment=Task & Process Manager
+Categories=Utility;
+Terminal=false

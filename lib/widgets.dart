@@ -90,7 +90,7 @@ class ProcessListTile extends HookConsumerWidget {
         leading:
             process.isMandatory
                 ? const Icon(Icons.priority_high, color: Colors.red)
-                : const Icon(Icons.check_circle_outline),
+                : const Icon(Icons.priority_high, color: Colors.grey),
         trailing: Text(
           process.deadline.difference(DateTime.now()).inDays.toString(),
         ),

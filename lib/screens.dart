@@ -55,7 +55,6 @@ class MyHomePage extends HookConsumerWidget {
           },
         ),
         actions: [
-          UpdateAppButton(),
           if (ref.watch(selectedProcessesProvider).isNotEmpty)
             IconButton(
               icon: const Icon(Icons.delete),
@@ -341,6 +340,14 @@ class ProcessCreateView extends HookConsumerWidget {
       return null;
     }, []);
 
+    useEffect(() {
+      listener() {}
+
+      textEditingController.addListener(listener);
+
+      return () => textEditingController.removeListener(listener);
+    }, [textEditingController]);
+
     final username = ref.read(userControllerProvider).username;
     return Scaffold(
       appBar: AppBar(title: const Text('Create Process')),
@@ -397,6 +404,7 @@ class ProcessCreateView extends HookConsumerWidget {
               minLines: 2,
               maxLines: 15,
             ),
+            const Gap(16.0),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -470,18 +478,42 @@ class LoginScreen extends HookConsumerWidget {
               },
             ),
             const Gap(16.0),
-            ElevatedButton(
-              onPressed: () {
-                userInfo.value = userInfo.value.copyWith(
-                  token: "token",
-                  isLoggedIn: true,
-                );
-                ref
-                    .read(userControllerProvider.notifier)
-                    .updateUser(userInfo.value);
-                context.pop();
-              },
-              child: const Text('Login'),
+            Row(
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    userInfo.value = userInfo.value.copyWith(
+                      token: "token",
+                      isLoggedIn: true,
+                    );
+                    ref
+                        .read(userControllerProvider.notifier)
+                        .updateUser(userInfo.value);
+                    context.pop();
+                  },
+                  child: const Text('Login'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    final dio = ref.read(dioProvider);
+                    await signupFromServer(
+                      dio,
+                      userInfo.value.username,
+                      userInfo.value.password,
+                    );
+
+                    userInfo.value = userInfo.value.copyWith(
+                      token: "token",
+                      isLoggedIn: true,
+                    );
+                    ref
+                        .read(userControllerProvider.notifier)
+                        .updateUser(userInfo.value);
+                    context.pop();
+                  },
+                  child: const Text("Sign up"),
+                ),
+              ],
             ),
           ],
         ),
@@ -509,6 +541,7 @@ class SettingScreen extends HookConsumerWidget {
                 () => ref.read(userControllerProvider.notifier).cleanUser(),
             icon: const Icon(Icons.logout),
           ),
+          UpdateAppButton(),
         ],
       ),
       body: Padding(

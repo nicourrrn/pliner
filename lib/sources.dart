@@ -44,6 +44,14 @@ Future<List<Process>> loadProcessFromServer(Dio dio, String username) async {
   return jsonList.map((json) => Process.fromJson(json)).toList();
 }
 
+signupFromServer(Dio dio, String username, String password) async {
+  final resp = await dio.post(
+    "users/",
+    data: {"username": username, "password": password},
+  );
+  return resp.data;
+}
+
 createProcessFromServer(Dio dio, Process process, String owner) async {
   await dio.post(
     "processes/",
