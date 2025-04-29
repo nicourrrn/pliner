@@ -29,6 +29,15 @@ Future<List<Process>> loadProcessFromFile() async {
       .cast<Process>();
 }
 
+Future<bool> pingServer(Dio dio) async {
+  try {
+    await dio.get("ping");
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 Future<List<Process>> loadProcessFromServer(Dio dio, String username) async {
   final resp = await dio.get("processes/user/$username");
   final List<dynamic> jsonList = resp.data;
@@ -60,6 +69,12 @@ updateProcessStepsFromServer(
     "processes/$processId/steps",
     data: steps.map((s) => s.toJson()).toList(),
   );
+}
+
+Future<List<String>> deletedProcessFromServer(Dio dio) async {
+  final response = await dio.get("processes/deleted");
+  final List<dynamic> jsonList = response.data;
+  return jsonList.map((json) => json.toString()).toList();
 }
 
 Future<List<Process>> loadProcessesFromSqlite(Database db) async {

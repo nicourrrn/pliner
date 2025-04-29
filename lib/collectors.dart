@@ -16,10 +16,7 @@ Future<List<Process>> databaseProcessList(Ref ref) async {
 
 @riverpod
 int processesToUpload(Ref ref) {
-  return ref
-      .watch(eventControllerProvider)
-      .where((p) => !p.executedOn.contains(ExecutedOn.server))
-      .length;
+  return ref.watch(eventControllerProvider).length;
 }
 
 @riverpod

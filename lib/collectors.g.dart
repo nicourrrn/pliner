@@ -26,7 +26,7 @@ final databaseProcessListProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef DatabaseProcessListRef = AutoDisposeFutureProviderRef<List<Process>>;
-String _$processesToUploadHash() => r'44cf1f271ac81c342adf959cbb0b3e8b3e89f416';
+String _$processesToUploadHash() => r'1d4cb1ca37e1f0ad3192ce87cb9c56cd80c9e08e';
 
 /// See also [processesToUpload].
 @ProviderFor(processesToUpload)

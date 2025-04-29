@@ -3,13 +3,13 @@ import "package:uuid/uuid.dart";
 
 String processToText(Process process) {
   var text =
-      "${process.name} +${process.deadline.difference(DateTime.now()).inDays}d +${process.timeNeeded.inHours}h${process.processType == ProcessType.focus ? "f" : "p"} \n";
+      "${process.name} +${process.deadline.difference(DateTime.now()).inDays}d +${process.timeNeeded.inHours}h${process.processType == ProcessType.focus ? "f" : "p"}\n";
   if (process.description.isNotEmpty) {
     text += "${process.description}\n";
   }
-  for (var step in process.steps) {
-    text += "${step.isMandatory ? "-" : "+"} ${step.text}\n";
-  }
+  text += process.steps
+      .map((step) => "${step.isMandatory ? "-" : "+"} ${step.text}")
+      .join("\n");
   return text;
 }
 
@@ -21,17 +21,19 @@ Process processFromText(
   List<Step> steps = const [],
 ]) {
   var lines = text.split("\n");
-  lines = lines.map((line) => line.trim()).toList();
+  lines = lines.map((line) => line.trim()).where((s) => s.isNotEmpty).toList();
   var name = lines[0];
   var description = "";
 
   final deadLineExp = RegExp(r"\+(\d+)d");
-  if (deadLineExp.hasMatch(name)) {
-    name = name.replaceAll(deadLineExp, "");
-  }
+
   var deadline = DateTime.now().add(
     Duration(days: int.parse(deadLineExp.firstMatch(name)?.group(1) ?? "7")),
   );
+
+  if (deadLineExp.hasMatch(name)) {
+    name = name.replaceAll(deadLineExp, "");
+  }
 
   final timeNeededExp = RegExp(r"\+(\d+)h(p|f)");
   var processType = ProcessType.focus;

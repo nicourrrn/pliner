@@ -1,3 +1,4 @@
+import "package:flutter/services.dart";
 import "package:gap/gap.dart";
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -72,41 +73,11 @@ class MyHomePage extends HookConsumerWidget {
           if (ref.watch(userControllerProvider).isLoggedIn) ...[
             IconButton(
               tooltip: "Sync",
-              icon: Badge(
-                label: Text(ref.watch(processesToUploadProvider).toString()),
-                alignment: Alignment.bottomRight,
-                child: const Icon(Icons.refresh),
-              ),
+              icon: const Icon(Icons.refresh),
               onPressed: () async {
                 try {
                   final dio = ref.read(dioProvider);
-                  final events = ref.read(eventControllerProvider);
-
-                  for (final event in events) {
-                    if (event.executedOn.contains(ExecutedOn.server)) {
-                      continue;
-                    }
-
-                    switch (event) {
-                      case CreateProcessEvent(:final process):
-                        final owner = ref.read(userControllerProvider).username;
-                        createProcessFromServer(dio, process, owner);
-                        break;
-                      case DeleteProcessEvent(:final processId):
-                        deleteProcessFromServer(dio, processId);
-                        break;
-                      case UpdateProcessEvent(:final process):
-                        updateProcessFromServer(dio, process);
-                        break;
-                      case UpdateProcessStepsEvent(
-                        :final processId,
-                        :final steps,
-                      ):
-                        updateProcessStepsFromServer(dio, processId, steps);
-                        break;
-                    }
-                  }
-                  ref.read(eventControllerProvider.notifier).cleanEvents();
+                  final localProcesses = ref.read(processListProvider);
 
                   final serverProcesses = await loadProcessFromServer(
                     dio,
@@ -116,34 +87,31 @@ class MyHomePage extends HookConsumerWidget {
                   final eventNotifier = ref.read(
                     eventControllerProvider.notifier,
                   );
+                  eventNotifier.cleanEvents();
 
-                  final deletedProcessIDs =
-                      events
-                          .whereType<DeleteProcessEvent>()
-                          .map((de) => de.processId)
-                          .toList();
+                  final username = ref.read(userControllerProvider).username;
 
                   for (final serverProcess in serverProcesses) {
-                    if (deletedProcessIDs.contains(serverProcess.id)) continue;
-                    try {
-                      final localProcess = ref
-                          .read(processListProvider)
-                          .firstWhere((l) => serverProcess == l);
-                      if (localProcess.editAt.isBefore(serverProcess.editAt)) {
-                        eventNotifier.addEvent(
-                          UpdateProcessEvent(
-                            serverProcess,
-                            executedOn: [ExecutedOn.server],
-                          ),
-                        );
-                      }
-                    } catch (e) {
+                    final containLocalProcess = localProcesses.contains(
+                      serverProcess,
+                    );
+                    if (!containLocalProcess) {
                       eventNotifier.addEvent(
-                        CreateProcessEvent(
-                          serverProcess,
-                          executedOn: [ExecutedOn.server],
-                        ),
+                        CreateProcessEvent(serverProcess, username),
                       );
+                    } else if (localProcesses
+                        .firstWhere((p) => p.id == serverProcess.id)
+                        .editAt
+                        .isBefore(serverProcess.editAt)) {
+                      eventNotifier.addEvent(UpdateProcessEvent(serverProcess));
+                    }
+                  }
+
+                  final deletedProcessIds = await deletedProcessFromServer(dio);
+                  final localProcessIds = localProcesses.map((p) => p.id);
+                  for (final process in deletedProcessIds) {
+                    if (localProcessIds.contains(process)) {
+                      eventNotifier.addEvent(DeleteProcessEvent(process));
                     }
                   }
                 } catch (e) {
@@ -271,6 +239,17 @@ class ProcessDetailView extends HookConsumerWidget {
               icon: const Icon(Icons.edit),
               onPressed: () => context.push("/process/${process.id}/edit"),
             ),
+          IconButton(
+            icon: const Icon(Icons.copy),
+            onPressed: () async {
+              await Clipboard.setData(
+                ClipboardData(
+                  text:
+                      "${processToText(process)}\nDeadline: ${formatDate(process.deadline, [yyyy, '-', mm, '-', dd])}",
+                ),
+              );
+            },
+          ),
         ],
       ),
       body: GestureDetector(
@@ -355,7 +334,14 @@ class ProcessCreateView extends HookConsumerWidget {
     final textEditingController = useTextEditingController(
       text: processToText(process.value),
     );
+    useEffect(() {
+      textEditingController.selection = TextSelection.fromPosition(
+        TextPosition(offset: baseProcess.name.indexOf("]")),
+      );
+      return null;
+    }, []);
 
+    final username = ref.read(userControllerProvider).username;
     return Scaffold(
       appBar: AppBar(title: const Text('Create Process')),
       body: Padding(
@@ -423,7 +409,7 @@ class ProcessCreateView extends HookConsumerWidget {
                     final event =
                         (processId != null)
                             ? Event.updateProcess(process.value)
-                            : Event.createProcess(process.value);
+                            : Event.createProcess(process.value, username);
                     ref.read(eventControllerProvider.notifier).addEvent(event);
 
                     context.pop();
@@ -440,7 +426,7 @@ class ProcessCreateView extends HookConsumerWidget {
                     final event =
                         (processId != null)
                             ? Event.updateProcess(process.value)
-                            : Event.createProcess(process.value);
+                            : Event.createProcess(process.value, username);
                     ref.read(eventControllerProvider.notifier).addEvent(event);
 
                     context.pop();

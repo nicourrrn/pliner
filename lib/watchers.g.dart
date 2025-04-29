@@ -7,7 +7,7 @@ part of 'watchers.dart';
 // **************************************************************************
 
 String _$syncEventsWithDatabaseHash() =>
-    r'b7b138d8f0fd4c62e597091245a5bee16263ad85';
+    r'1fb17b47c6fa3e1bc0fcc12a8e3a282db7d59661';
 
 /// See also [syncEventsWithDatabase].
 @ProviderFor(syncEventsWithDatabase)

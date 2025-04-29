@@ -69,8 +69,6 @@ class ProcessList extends _$ProcessList {
   }
 
   _handleEvent(Event event) {
-    if (event.executedOn.contains(ExecutedOn.local)) return;
-
     switch (event) {
       case CreateProcessEvent(:final process):
         appendProcess(process);

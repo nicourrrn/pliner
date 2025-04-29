@@ -9,26 +9,11 @@ part 'watchers.g.dart';
 @riverpod
 syncEventsWithDatabase(Ref ref) async {
   final db = await ref.read(databaseProvider.future);
-  ref.listen<List<Event>>(eventControllerProvider, (prev, next) {
+  final dio = ref.read(dioProvider);
+  ref.listen<List<Event>>(eventControllerProvider, (prev, next) async {
     for (final event in next) {
-      if (event.executedOn.contains(ExecutedOn.local)) {
-        continue;
-      }
-
-      switch (event) {
-        case CreateProcessEvent(:final process):
-          createProcessFromSqlite(db, process);
-          break;
-        case DeleteProcessEvent(:final processId):
-          deleteProcessFromSqlite(db, processId);
-          break;
-        case UpdateProcessEvent(:final process):
-          updateProcessFromSqlite(db, process);
-          break;
-        case UpdateProcessStepsEvent(:final processId, :final steps):
-          updateProcessStepsFromSqlite(db, processId, steps);
-          break;
-      }
+      handleEventOnLocal(event, db);
+      if (await pingServer(dio)) handleEventOnServer(event, dio);
     }
   });
 }
