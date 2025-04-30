@@ -1,29 +1,31 @@
-# Maintainer: Твоє ім'я <твоя@пошта>
 pkgname=pliner
 pkgver=1.0.0
 pkgrel=1
-pkgdesc="Task and process manager built with Flutter"
+pkgdesc="Pliner — task manager with life-process philosophy"
 arch=('x86_64')
-url="https://github.com/твій-юзер/pliner"
+url="https://github.com/nicourrrn/pliner"
 license=('MIT')
-depends=('flutter' 'glibc')
-makedepends=('git' 'flutter' 'cmake' 'ninja')
+depends=('fvm' 'glibc')
+makedepends=('git' 'fvm' 'cmake' 'ninja')
 source=("git+$url.git")
 md5sums=('SKIP')
 
 build() {
   cd "$srcdir/$pkgname"
-  flutter pub get
-  flutter build linux --release
+  fvm flutter pub get
+  fvm flutter build linux --release
 }
 
 package() {
+  install -d "$pkgdir/opt/$pkgname"
+  cp -r "$srcdir/$pkgname/build/linux/x64/release/bundle/." "$pkgdir/opt/$pkgname/"
+
   install -d "$pkgdir/usr/bin"
-  install -Dm755 "$srcdir/$pkgname/build/linux/x64/release/bundle/pliner" "$pkgdir/usr/bin/pliner"
+  ln -s "/opt/$pkgname/self_process_manager_front" "$pkgdir/usr/bin/pliner"
 
   install -d "$pkgdir/usr/share/applications"
-  install -Dm644 "linux/pliner.desktop" "$pkgdir/usr/share/applications/pliner.desktop"
+  install -Dm644 "$srcdir/pliner/linux/pliner.desktop" "$pkgdir/usr/share/applications/pliner.desktop"
 
   install -d "$pkgdir/usr/share/icons/hicolor/256x256/apps"
-  install -Dm644 "assets/icon/app_icon.png" "$pkgdir/usr/share/icons/hicolor/256x256/apps/pliner.png"
+  install -Dm644 "$srcdir/pliner/assets/icon/icon.png" "$pkgdir/usr/share/icons/hicolor/256x256/apps/pliner.png"
 }
