@@ -62,7 +62,7 @@ final processGroupsListProvider = AutoDisposeProvider<List<String>>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef ProcessGroupsListRef = AutoDisposeProviderRef<List<String>>;
-String _$sortedProcessHash() => r'8ef918b53541f92dd3fc303ce0ddd01cdc70eccc';
+String _$sortedProcessHash() => r'9fbafe495be9bff6d56e491dc5ec38b3c42c6625';
 
 /// See also [sortedProcess].
 @ProviderFor(sortedProcess)

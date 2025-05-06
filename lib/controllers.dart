@@ -220,6 +220,11 @@ Future<Database> database(Ref ref) async {
                 FOREIGN KEY (processId) REFERENCES processes (id)
                 )
         """);
+      db.execute("""
+            CREATE TABLE IF NOT EXISTS deletedProcesses (
+                id TEXT PRIMARY KEY
+            )
+        """);
     },
   );
 }

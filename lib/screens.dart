@@ -102,18 +102,27 @@ class MyHomePage extends HookConsumerWidget {
                 try {
                   final dio = ref.read(dioProvider);
                   final localProcesses = ref.read(processListProvider);
+                  final username = ref.read(userControllerProvider).username;
+                  final db = await ref.read(databaseProvider.future);
+
+                  final deletedProcesses = await getDeletedProcessesFromSqlite(
+                    db,
+                  );
+                  await deletedProcessesToServer(dio, deletedProcesses);
+
+                  for (final process in localProcesses) {
+                    await createProcessFromServer(dio, process, username);
+                  }
 
                   final serverProcesses = await loadProcessFromServer(
                     dio,
-                    ref.read(userControllerProvider).username,
+                    username,
                   );
 
                   final eventNotifier = ref.read(
                     eventControllerProvider.notifier,
                   );
                   eventNotifier.cleanEvents();
-
-                  final username = ref.read(userControllerProvider).username;
 
                   for (final serverProcess in serverProcesses) {
                     final containLocalProcess = localProcesses.contains(

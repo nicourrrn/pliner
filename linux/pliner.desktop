@@ -1,8 +1,8 @@
 [Desktop Entry]
 Name=Pliner
 Comment=Task manager with life-process philosophy
-Exec=/opt/self_process_manager_front/self_process_manager_front
-Path=/opt/self_process_manager_front
+Exec=/opt/self_process_manager_front/pliner
+Path=/opt/pliner
 Icon=pliner
 Terminal=false
 Type=Application

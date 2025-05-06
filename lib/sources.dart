@@ -85,6 +85,10 @@ Future<List<String>> deletedProcessFromServer(Dio dio) async {
   return jsonList.map((json) => json.toString()).toList();
 }
 
+deletedProcessesToServer(Dio dio, List<String> processIds) async {
+  await dio.post("processes/deleted", data: processIds);
+}
+
 Future<List<Process>> loadProcessesFromSqlite(Database db) async {
   final rawProcesses = await db.query('processes');
   var processes = [];
@@ -118,6 +122,7 @@ createProcessFromSqlite(Database db, Process process) {
 deleteProcessFromSqlite(Database db, String processId) {
   db.delete('processes', where: 'id = ?', whereArgs: [processId]);
   db.delete('steps', where: 'processId = ?', whereArgs: [processId]);
+  db.insert("deletedProcesses", {"id": processId});
 }
 
 updateProcessFromSqlite(Database db, Process process) {
@@ -133,4 +138,9 @@ updateProcessStepsFromSqlite(Database db, String processId, List<Step> steps) {
   for (var step in steps) {
     db.update('steps', step.toJson(), where: 'id = ?', whereArgs: [step.id]);
   }
+}
+
+Future<List<String>> getDeletedProcessesFromSqlite(Database db) async {
+  final rawProcesses = await db.query('deletedProcesses');
+  return rawProcesses.map((e) => e['id'].toString()).toList();
 }

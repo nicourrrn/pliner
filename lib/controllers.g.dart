@@ -38,7 +38,7 @@ final dioProvider = AutoDisposeProvider<Dio>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef DioRef = AutoDisposeProviderRef<Dio>;
-String _$databaseHash() => r'bd54658be43312ac22af30a6b5128770cf4c6270';
+String _$databaseHash() => r'939ff09a5aa228ea7fdb842a56b21fffd53e59f6';
 
 /// See also [database].
 @ProviderFor(database)
