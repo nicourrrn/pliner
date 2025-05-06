@@ -6,6 +6,8 @@ import "package:sqflite/sqflite.dart";
 
 import "./models.dart";
 
+// File part
+
 saveProcessesToFile(List<Process> processes) async {
   final directory = await getApplicationDocumentsDirectory();
   final file = File('${directory.path}/processes.json');
@@ -29,6 +31,9 @@ Future<List<Process>> loadProcessFromFile() async {
       .cast<Process>();
 }
 
+// Server part
+
+//      Utils
 Future<bool> pingServer(Dio dio) async {
   try {
     await dio.get("ping");
@@ -38,12 +43,6 @@ Future<bool> pingServer(Dio dio) async {
   }
 }
 
-Future<List<Process>> loadProcessFromServer(Dio dio, String username) async {
-  final resp = await dio.get("processes/user/$username");
-  final List<dynamic> jsonList = resp.data;
-  return jsonList.map((json) => Process.fromJson(json)).toList();
-}
-
 signupFromServer(Dio dio, String username, String password) async {
   final resp = await dio.post(
     "users/",
@@ -51,6 +50,23 @@ signupFromServer(Dio dio, String username, String password) async {
   );
   return resp.data;
 }
+
+//      Get
+
+
+Future<List<Process>> loadProcessFromServer(Dio dio, String username) async {
+  final resp = await dio.get("processes/user/$username");
+  final List<dynamic> jsonList = resp.data;
+  return jsonList.map((json) => Process.fromJson(json)).toList();
+}
+
+Future<List<String>> deletedProcessFromServer(Dio dio) async {
+  final response = await dio.get("processes/deleted");
+  final List<dynamic> jsonList = response.data;
+  return jsonList.map((json) => json.toString()).toList();
+}
+
+//      Post
 
 createProcessFromServer(Dio dio, Process process, String owner) async {
   await dio.post(
@@ -79,15 +95,46 @@ updateProcessStepsFromServer(
   );
 }
 
-Future<List<String>> deletedProcessFromServer(Dio dio) async {
-  final response = await dio.get("processes/deleted");
-  final List<dynamic> jsonList = response.data;
-  return jsonList.map((json) => json.toString()).toList();
-}
-
 deletedProcessesToServer(Dio dio, List<String> processIds) async {
   await dio.post("processes/deleted", data: processIds);
 }
+
+// SQLite part
+//      Utils
+
+initDatabase(Database db, int version) async {
+  await db.execute("""
+            CREATE TABLE IF NOT EXISTS processes (
+                id TEXT PRIMARY KEY,
+                name TEXT,
+                description TEXT,
+                isMandatory BOOLEAN,
+                processType TEXT,
+                timeNeeded INTEGER,
+                groupName TEXT,
+                deadline TEXT,
+                assignedAt TEXT,
+                owner TEXT,
+                editAt TEXT
+            )
+            """);
+  await db.execute("""
+            CREATE TABLE IF NOT EXISTS steps (
+                id TEXT PRIMARY KEY,
+                text TEXT,
+                done INTEGER,
+                isMandatory INTEGER,
+                processId TEXT,
+                FOREIGN KEY (processId) REFERENCES processes (id)
+                )
+        """);
+  await db.execute("""
+            CREATE TABLE IF NOT EXISTS deletedProcesses (
+                id TEXT PRIMARY KEY
+            )
+        """);
+}
+//      Get
 
 Future<List<Process>> loadProcessesFromSqlite(Database db) async {
   final rawProcesses = await db.query('processes');
@@ -103,6 +150,15 @@ Future<List<Process>> loadProcessesFromSqlite(Database db) async {
   }
   return processes.map((t) => Process.fromJson(t)).toList();
 }
+
+
+Future<List<String>> getDeletedProcessesFromSqlite(Database db) async {
+  final rawProcesses = await db.query('deletedProcesses');
+  return rawProcesses.map((e) => e['id'].toString()).toList();
+}
+
+//      Post
+
 
 createProcessFromSqlite(Database db, Process process) {
   var processJson = process.toJson();
@@ -140,7 +196,3 @@ updateProcessStepsFromSqlite(Database db, String processId, List<Step> steps) {
   }
 }
 
-Future<List<String>> getDeletedProcessesFromSqlite(Database db) async {
-  final rawProcesses = await db.query('deletedProcesses');
-  return rawProcesses.map((e) => e['id'].toString()).toList();
-}

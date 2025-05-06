@@ -6,55 +6,7 @@ part of 'controllers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$prefsHash() => r'72c810c81ec4e71574d451a1a915ba427ad6af98';
-
-/// See also [prefs].
-@ProviderFor(prefs)
-final prefsProvider = AutoDisposeFutureProvider<SharedPreferences>.internal(
-  prefs,
-  name: r'prefsProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$prefsHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef PrefsRef = AutoDisposeFutureProviderRef<SharedPreferences>;
-String _$dioHash() => r'a06d1377a94b2f002d97e4eaf859403db029a7f4';
-
-/// See also [dio].
-@ProviderFor(dio)
-final dioProvider = AutoDisposeProvider<Dio>.internal(
-  dio,
-  name: r'dioProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$dioHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef DioRef = AutoDisposeProviderRef<Dio>;
-String _$databaseHash() => r'939ff09a5aa228ea7fdb842a56b21fffd53e59f6';
-
-/// See also [database].
-@ProviderFor(database)
-final databaseProvider = AutoDisposeFutureProvider<Database>.internal(
-  database,
-  name: r'databaseProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$databaseHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef DatabaseRef = AutoDisposeFutureProviderRef<Database>;
-String _$deadlinesHash() => r'2e86e5f9634aa55c07a73c9b2aea453c756a88db';
+String _$deadlinesHash() => r'2dba6bf16c85f485136f14780808d2a6afb96e0b';
 
 /// See also [deadlines].
 @ProviderFor(deadlines)
@@ -70,7 +22,55 @@ final deadlinesProvider = AutoDisposeProvider<List<DateTime>>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef DeadlinesRef = AutoDisposeProviderRef<List<DateTime>>;
-String _$selectedGroupsHash() => r'838db0373ca9aef6c5ef094477ad43ba02ab707d';
+String _$prefsHash() => r'5e2d3760c67ad5e43dda1c598879b6b771bb40c0';
+
+/// See also [prefs].
+@ProviderFor(prefs)
+final prefsProvider = AutoDisposeFutureProvider<SharedPreferences>.internal(
+  prefs,
+  name: r'prefsProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$prefsHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef PrefsRef = AutoDisposeFutureProviderRef<SharedPreferences>;
+String _$dioHash() => r'362703008cb49bcb07a3e800b25bec7b4df41ee4';
+
+/// See also [dio].
+@ProviderFor(dio)
+final dioProvider = AutoDisposeProvider<Dio>.internal(
+  dio,
+  name: r'dioProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$dioHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef DioRef = AutoDisposeProviderRef<Dio>;
+String _$databaseHash() => r'4c723b831d62544eeb3262144f68cb79ff9b4f15';
+
+/// See also [database].
+@ProviderFor(database)
+final databaseProvider = AutoDisposeFutureProvider<Database>.internal(
+  database,
+  name: r'databaseProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$databaseHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef DatabaseRef = AutoDisposeFutureProviderRef<Database>;
+String _$selectedGroupsHash() => r'7b034f35243919249a2246d35e935d482b219de1';
 
 /// See also [SelectedGroups].
 @ProviderFor(SelectedGroups)
@@ -87,7 +87,7 @@ final selectedGroupsProvider =
     );
 
 typedef _$SelectedGroups = AutoDisposeNotifier<List<String>>;
-String _$selectedProcessesHash() => r'96e257f82d599b349240ec9d9dffbc9a61496091';
+String _$selectedProcessesHash() => r'1f3e64b54bc35667a49a7e0f06e6e325dc0cecc0';
 
 /// See also [SelectedProcesses].
 @ProviderFor(SelectedProcesses)
@@ -104,7 +104,7 @@ final selectedProcessesProvider =
     );
 
 typedef _$SelectedProcesses = AutoDisposeNotifier<List<String>>;
-String _$processListHash() => r'1a5bdd6c8c647c5b47e02c62ffeb2f86cbcbbbba';
+String _$processListHash() => r'70acd64629f7614b0fa745d1123d9ce5b64cb0fd';
 
 /// See also [ProcessList].
 @ProviderFor(ProcessList)
@@ -121,7 +121,7 @@ final processListProvider =
     );
 
 typedef _$ProcessList = AutoDisposeNotifier<List<models.Process>>;
-String _$userControllerHash() => r'c19d1f0a72d2c64615c771caa61bd15de1f36305';
+String _$userControllerHash() => r'fade36e2b06ebbb857056fcf56c127aa768f2ea3';
 
 /// See also [UserController].
 @ProviderFor(UserController)
@@ -138,12 +138,12 @@ final userControllerProvider =
     );
 
 typedef _$UserController = AutoDisposeNotifier<models.User>;
-String _$eventControllerHash() => r'ab5aa024441dfcdf62ce8d1d559feb918df47e81';
+String _$eventControllerHash() => r'8fa4369ecf6adec7db91590822216e593e114420';
 
 /// See also [EventController].
 @ProviderFor(EventController)
 final eventControllerProvider =
-    AutoDisposeNotifierProvider<EventController, List<Event>>.internal(
+    AutoDisposeNotifierProvider<EventController, List<models.Event>>.internal(
       EventController.new,
       name: r'eventControllerProvider',
       debugGetCreateSourceHash:
@@ -154,6 +154,6 @@ final eventControllerProvider =
       allTransitiveDependencies: null,
     );
 
-typedef _$EventController = AutoDisposeNotifier<List<Event>>;
+typedef _$EventController = AutoDisposeNotifier<List<models.Event>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

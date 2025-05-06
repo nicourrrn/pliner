@@ -1,8 +1,16 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import "package:google_fonts/google_fonts.dart";
 
-bool isDesktop(BuildContext context) {
-  return MediaQuery.of(context).size.width > 800;
+bool isDesktop() {
+  return !kIsWeb &&
+      (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+}
+
+bool isLowWidthSize(BuildContext context) {
+  return MediaQuery.of(context).size.width < 800;
 }
 
 final _baseFont = GoogleFonts.manrope();

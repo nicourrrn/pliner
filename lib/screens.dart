@@ -6,23 +6,22 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import "package:go_router/go_router.dart";
 import 'package:date_format/date_format.dart';
 import "package:self_process_manager/sources.dart";
+
 import "./models.dart";
 import "./theme.dart";
-import "./convetrers.dart";
 import "./controllers.dart";
 import "./widgets.dart";
-import "./events.dart";
 import "./collectors.dart";
 
-class MyDesktopHomePage extends HookConsumerWidget {
-  const MyDesktopHomePage({super.key});
+class SplitedScreen extends HookConsumerWidget {
+  const SplitedScreen({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final choosedProcess = ref.watch(choosedProcessProvider);
     return Scaffold(
       body: Row(
         children: [
-          Expanded(flex: 2, child: const MyHomePage()),
+          Expanded(flex: 2, child: const ProcessListScreen()),
           VerticalDivider(width: 1),
           Expanded(
             flex: 3,
@@ -37,8 +36,8 @@ class MyDesktopHomePage extends HookConsumerWidget {
   }
 }
 
-class MyHomePage extends HookConsumerWidget {
-  const MyHomePage({super.key});
+class ProcessListScreen extends HookConsumerWidget {
+  const ProcessListScreen({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final heightIndicator = useState(0.0);
@@ -88,9 +87,9 @@ class MyHomePage extends HookConsumerWidget {
                 for (final process in toDelete) {
                   ref
                       .read(eventControllerProvider.notifier)
-                      .addEvent(Event.deleteProcess(process));
+                      .add(Event.deleteProcess(process));
                 }
-                ref.read(selectedProcessesProvider.notifier).cleanState();
+                ref.read(selectedProcessesProvider.notifier).clear();
               },
             ),
 
@@ -122,21 +121,21 @@ class MyHomePage extends HookConsumerWidget {
                   final eventNotifier = ref.read(
                     eventControllerProvider.notifier,
                   );
-                  eventNotifier.cleanEvents();
+                  eventNotifier.clear();
 
                   for (final serverProcess in serverProcesses) {
                     final containLocalProcess = localProcesses.contains(
                       serverProcess,
                     );
                     if (!containLocalProcess) {
-                      eventNotifier.addEvent(
+                      eventNotifier.add(
                         CreateProcessEvent(serverProcess, username),
                       );
                     } else if (localProcesses
                         .firstWhere((p) => p.id == serverProcess.id)
                         .editAt
                         .isBefore(serverProcess.editAt)) {
-                      eventNotifier.addEvent(UpdateProcessEvent(serverProcess));
+                      eventNotifier.add(UpdateProcessEvent(serverProcess));
                     }
                   }
 
@@ -144,27 +143,14 @@ class MyHomePage extends HookConsumerWidget {
                   final localProcessIds = localProcesses.map((p) => p.id);
                   for (final process in deletedProcessIds) {
                     if (localProcessIds.contains(process)) {
-                      eventNotifier.addEvent(DeleteProcessEvent(process));
+                      eventNotifier.add(DeleteProcessEvent(process));
                     }
                   }
                 } catch (e) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     showDialog(
                       context: context,
-                      builder:
-                          (context) => AlertDialog(
-                            title: const Text("Error"),
-                            content: Text(
-                              "Failed to load processes with error $e",
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => context.pop(),
-                                child: const Text("OK"),
-                              ),
-                            ],
-                          ),
-                    );
+                      builder: (context) =>  DefaultAlertWidget(error: e.toString())                   );
                   });
                 }
               },
@@ -217,7 +203,7 @@ class MyHomePage extends HookConsumerWidget {
                   ],
                 ),
               ),
-            if (isDesktop(context)) ...[
+            if (isDesktop()) ...[
               const Gap(8.0),
               OutlinedButton(
                 onPressed: () => context.push("/process/create"),
@@ -299,7 +285,7 @@ class ProcessDetailView extends HookConsumerWidget {
       appBar: AppBar(
         title: Text(titleText, style: Theme.of(context).textTheme.titleSmall),
         actions: [
-          if (isDesktop(context))
+          if (isDesktop())
             IconButton(
               icon: const Icon(Icons.edit),
               onPressed: () => context.push("/process/${process.id}/edit"),
@@ -504,7 +490,7 @@ class ProcessCreateView extends HookConsumerWidget {
                         (processId != null)
                             ? Event.updateProcess(process.value)
                             : Event.createProcess(process.value, username);
-                    ref.read(eventControllerProvider.notifier).addEvent(event);
+                    ref.read(eventControllerProvider.notifier).add(event);
 
                     context.pop();
                   },
@@ -521,7 +507,7 @@ class ProcessCreateView extends HookConsumerWidget {
                         (processId != null)
                             ? Event.updateProcess(process.value)
                             : Event.createProcess(process.value, username);
-                    ref.read(eventControllerProvider.notifier).addEvent(event);
+                    ref.read(eventControllerProvider.notifier).add(event);
 
                     context.pop();
                   },
@@ -574,15 +560,15 @@ class LoginScreen extends HookConsumerWidget {
                     );
                     ref
                         .read(userControllerProvider.notifier)
-                        .updateUser(userInfo.value);
+                        .update(userInfo.value);
                     context.pop();
                   },
                   child: const Text('Login'),
                 ),
                 ElevatedButton(
-                  onPressed: () async {
+                  onPressed: () {
                     final dio = ref.read(dioProvider);
-                    await signupFromServer(
+                    signupFromServer(
                       dio,
                       userInfo.value.username,
                       userInfo.value.password,
@@ -594,7 +580,7 @@ class LoginScreen extends HookConsumerWidget {
                     );
                     ref
                         .read(userControllerProvider.notifier)
-                        .updateUser(userInfo.value);
+                        .update(userInfo.value);
                     context.pop();
                   },
                   child: const Text("Sign up"),
@@ -624,7 +610,7 @@ class SettingScreen extends HookConsumerWidget {
         actions: [
           IconButton(
             onPressed:
-                () => ref.read(userControllerProvider.notifier).cleanUser(),
+                () => ref.read(userControllerProvider.notifier).clear(),
             icon: const Icon(Icons.logout),
           ),
           UpdateAppButton(),

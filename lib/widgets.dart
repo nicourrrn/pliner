@@ -5,8 +5,8 @@ import "package:go_router/go_router.dart";
 import "package:url_launcher/url_launcher.dart";
 import "./controllers.dart";
 import "./theme.dart";
-import "./events.dart";
 import "./collectors.dart";
+import "./models.dart";
 
 class StepListView extends HookConsumerWidget {
   const StepListView({super.key, required this.processId});
@@ -43,7 +43,7 @@ class StepListView extends HookConsumerWidget {
                     return s;
                   }).toList();
 
-              eventNotifier.addEvent(
+              eventNotifier.add(
                 Event.updateProcessSteps(processId, updatedSteps),
               );
             },
@@ -101,7 +101,7 @@ class ProcessListTile extends HookConsumerWidget {
                 .toggleProcess(process.id);
           } else {
             ref.read(choosedProcessProvider.notifier).state = process.id;
-            if (!isDesktop(context)) context.push("/process/${process.id}");
+            if (isLowWidthSize(context)) context.push("/process/${process.id}");
           }
         },
         tileColor: color.value,
@@ -158,4 +158,26 @@ class UpdateAppButton extends HookConsumerWidget {
       icon: const Icon(Icons.update),
     );
   }
+}
+
+class DefaultAlertWidget extends HookConsumerWidget {
+    const DefaultAlertWidget({super.key, required this.error});
+
+    final String error;
+
+    @override
+      Widget build(BuildContext context, WidgetRef ref) => 
+                           AlertDialog(
+                            title: const Text("Error"),
+                            content: Text(
+                              "Failed to load processes with error $error",
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => context.pop(),
+                                child: const Text("OK"),
+                              ),
+                            ],
+                          );
+
 }

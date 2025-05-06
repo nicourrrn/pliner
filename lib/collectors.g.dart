@@ -7,7 +7,7 @@ part of 'collectors.dart';
 // **************************************************************************
 
 String _$databaseProcessListHash() =>
-    r'a0a2f55dd069a661b51922ffb280f65ed30e1484';
+    r'993bc183f21124f30990d7a61dd4b3978d2e341d';
 
 /// See also [databaseProcessList].
 @ProviderFor(databaseProcessList)
@@ -26,7 +26,7 @@ final databaseProcessListProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef DatabaseProcessListRef = AutoDisposeFutureProviderRef<List<Process>>;
-String _$processesToUploadHash() => r'1d4cb1ca37e1f0ad3192ce87cb9c56cd80c9e08e';
+String _$processesToUploadHash() => r'7310b51ceaaf3dc211da639386355e0b27f7f98d';
 
 /// See also [processesToUpload].
 @ProviderFor(processesToUpload)
@@ -44,7 +44,7 @@ final processesToUploadProvider = AutoDisposeProvider<int>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef ProcessesToUploadRef = AutoDisposeProviderRef<int>;
-String _$processGroupsListHash() => r'1fb4b58be06a19b0e86094dc009c7f84b118ffb0';
+String _$processGroupsListHash() => r'82fde2159a2896ae9bfc7f44ec5a2f09e12f2c4b';
 
 /// See also [processGroupsList].
 @ProviderFor(processGroupsList)
@@ -80,5 +80,24 @@ final sortedProcessProvider = AutoDisposeProvider<List<Process>>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef SortedProcessRef = AutoDisposeProviderRef<List<Process>>;
+String _$syncEventsWithDatabaseHash() =>
+    r'1fb17b47c6fa3e1bc0fcc12a8e3a282db7d59661';
+
+/// See also [syncEventsWithDatabase].
+@ProviderFor(syncEventsWithDatabase)
+final syncEventsWithDatabaseProvider = AutoDisposeProvider<Object?>.internal(
+  syncEventsWithDatabase,
+  name: r'syncEventsWithDatabaseProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$syncEventsWithDatabaseHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef SyncEventsWithDatabaseRef = AutoDisposeProviderRef<Object?>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

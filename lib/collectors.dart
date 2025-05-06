@@ -10,47 +10,41 @@ part "collectors.g.dart";
 @riverpod
 Future<List<Process>> databaseProcessList(Ref ref) async {
   final db = await ref.watch(databaseProvider.future);
-  final processes = await loadProcessesFromSqlite(db);
-  return processes;
+  return await loadProcessesFromSqlite(db);
 }
 
 @riverpod
-int processesToUpload(Ref ref) {
-  return ref.watch(eventControllerProvider).length;
-}
+int processesToUpload(Ref ref) => ref.watch(eventControllerProvider).length;
 
 @riverpod
-List<String> processGroupsList(Ref ref) {
-  return ref
-      .watch(processListProvider)
-      .map((process) => process.groupName)
-      .toSet()
-      .toList();
-}
-
-enum SortBy { name, deadline, group }
+List<String> processGroupsList(Ref ref) =>
+    ref
+        .watch(processListProvider)
+        .map((process) => process.groupName)
+        .toSet()
+        .toList();
 
 final sortByProvider = StateProvider<SortBy>((ref) => SortBy.deadline);
 
-List<Process> filterByName(List<Process> processes, String nameFilter) {
-  if (nameFilter.isEmpty) return processes;
-  return processes
-      .where(
-        (process) =>
-            process.name.toLowerCase().contains(nameFilter.toLowerCase()),
-      )
-      .toList();
-}
+List<Process> filterByName(List<Process> processes, String nameFilter) =>
+    nameFilter.isEmpty
+        ? processes
+        : processes
+            .where(
+              (process) =>
+                  process.name.toLowerCase().contains(nameFilter.toLowerCase()),
+            )
+            .toList();
 
 List<Process> filterByGroup(
   List<Process> processes,
   List<String> selectedGroups,
-) {
-  if (selectedGroups.isEmpty) return processes;
-  return processes
-      .where((process) => selectedGroups.contains(process.groupName))
-      .toList();
-}
+) =>
+    selectedGroups.isEmpty
+        ? processes
+        : processes
+            .where((process) => selectedGroups.contains(process.groupName))
+            .toList();
 
 List<Process> sortProcesses(List<Process> processes, SortBy sortBy) {
   switch (sortBy) {
@@ -74,4 +68,16 @@ List<Process> sortedProcess(Ref ref) {
     filterByName(filterByGroup(processes, selectedGroups), nameFilter),
     sortBy,
   );
+}
+
+@riverpod
+syncEventsWithDatabase(Ref ref) async {
+  final db = await ref.read(databaseProvider.future);
+  final dio = ref.read(dioProvider);
+  ref.listen<List<Event>>(eventControllerProvider, (prev, next) async {
+    for (final event in next) {
+      handleEventOnLocal(event, db);
+      if (await pingServer(dio)) handleEventOnServer(event, dio);
+    }
+  });
 }

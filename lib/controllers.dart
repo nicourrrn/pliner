@@ -1,4 +1,6 @@
 import 'dart:io';
+import "package:self_process_manager/sources.dart";
+import "package:self_process_manager/theme.dart";
 import "package:shared_preferences/shared_preferences.dart";
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -6,9 +8,9 @@ import "package:dio/dio.dart";
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:flutter/foundation.dart';
 import "package:path_provider/path_provider.dart";
+import "package:collection/collection.dart";
 import "./collectors.dart";
 import "./models.dart" as models;
-import "./events.dart";
 
 part 'controllers.g.dart';
 
@@ -19,22 +21,54 @@ final processNameFilterProvider = StateProvider<String>((ref) => "");
 final choosedProcessProvider = StateProvider<String>((ref) => "");
 
 @riverpod
+List<DateTime> deadlines(Ref ref) =>
+    ref.watch(processListProvider).map((process) => process.deadline).toList();
+
+@riverpod
+Future<SharedPreferences> prefs(Ref ref) async =>
+    await SharedPreferences.getInstance();
+
+@riverpod
+Dio dio(Ref ref) => Dio(
+  BaseOptions(
+    baseUrl: ref.watch(baseUrlProvider),
+    connectTimeout: const Duration(seconds: 3),
+    receiveTimeout: const Duration(seconds: 3),
+  ),
+);
+
+@riverpod
+Future<Database> database(Ref ref) async {
+  final directory = await getApplicationDocumentsDirectory();
+
+  if (isDesktop()) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+
+  return openDatabase(
+    "${directory.path}/processes.db",
+    version: 1,
+    onCreate: initDatabase,
+  );
+}
+
+@riverpod
 class SelectedGroups extends _$SelectedGroups {
   @override
   List<String> build() => [];
 
-  deleteRemovedGroups() {
+  toggleGroup(String group) {
     final groups = ref.read(processGroupsListProvider);
-    state = state.where((group) => groups.contains(group)).toList();
+    var temp = state.where((group) => groups.contains(group)).toList();
+    state =
+        temp.contains(group)
+            ? temp.where((g) => g != group).toList()
+            : [...temp, group];
   }
 
-  toggleGroup(String group) {
-    deleteRemovedGroups();
-    if (state.contains(group)) {
-      state = state.where((g) => g != group).toList();
-    } else {
-      state = [...state, group];
-    }
+  clear() {
+    state = [];
   }
 }
 
@@ -44,14 +78,15 @@ class SelectedProcesses extends _$SelectedProcesses {
   List<String> build() => [];
 
   toggleProcess(String processId) {
-    if (state.contains(processId)) {
-      state = state.where((id) => id != processId).toList();
-    } else {
-      state = [...state, processId];
-    }
+    final processes = ref.read(processListProvider).map((p) => p.id);
+    var temp = state.where((id) => processes.contains(id));
+    state =
+        temp.contains(processId)
+            ? temp.where((id) => id != processId).toList()
+            : [...temp, processId];
   }
 
-  cleanState() {
+  clear() {
     state = [];
   }
 }
@@ -60,27 +95,26 @@ class SelectedProcesses extends _$SelectedProcesses {
 class ProcessList extends _$ProcessList {
   @override
   List<models.Process> build() {
-    ref.listen<List<Event>>(eventControllerProvider, (prev, events) {
-      for (final event in events) {
-        _handleEvent(event);
-      }
-    });
+    ref.listen<List<models.Event>>(
+      eventControllerProvider,
+      (prev, events) => events.forEach(_handleEvent),
+    );
     return [];
   }
 
-  _handleEvent(Event event) {
+  _handleEvent(models.Event event) {
     switch (event) {
-      case CreateProcessEvent(:final process):
-        appendProcess(process);
+      case models.CreateProcessEvent(:final process):
+        append(process);
         break;
-      case DeleteProcessEvent(:final processId):
-        removeProcess([processId]);
+      case models.DeleteProcessEvent(:final processId):
+        remove([processId]);
         break;
-      case UpdateProcessEvent(:final process):
-        appendOrReplaceProcess(process);
+      case models.UpdateProcessEvent(:final process):
+        update(process);
         break;
-      case UpdateProcessStepsEvent(:final processId, :final steps):
-        updateProcessSteps(processId, steps);
+      case models.UpdateProcessStepsEvent(:final processId, :final steps):
+        updateSteps(processId, steps);
         break;
     }
   }
@@ -89,44 +123,42 @@ class ProcessList extends _$ProcessList {
     state = processes;
   }
 
-  updateProcessSteps(String processId, List<models.Step> steps) {
-    state =
-        state
-            .map(
-              (process) =>
-                  (process.id == processId)
-                      ? process.copyWith(steps: steps)
-                      : process,
-            )
-            .toList();
+  updateSteps(String processId, List<models.Step> steps) {
+    state = [
+      ...state.map(
+        (process) =>
+            (process.id == processId)
+                ? process.copyWith(steps: steps)
+                : process,
+      ),
+    ];
   }
 
-  appendProcess(models.Process process) {
-    if (state.any((p) => p.id == process.id)) {
-      state = state.where((p) => p.id != process.id).toList();
-    }
-    state = [...state, process];
+  append(models.Process process) {
+    state = [...state.where((p) => p.id != process.id), process];
   }
 
-  appendOrReplaceProcess(models.Process process) {
+  update(models.Process process) {
     if (state.contains(process)) {
-      var processToReplace = state.firstWhere((p) => p.id == process.id);
+      var oldProcess = state.firstWhere((p) => p.id == process.id);
       var newSteps =
-          process.steps.map((p) {
-            var stepToReplace =
-                processToReplace.steps
-                    .where((s) => s.text == p.text)
-                    .firstOrNull;
-            if (stepToReplace == null) return p;
-            return p.copyWith(id: stepToReplace.id, done: stepToReplace.done);
+          process.steps.map((newStep) {
+            var stepToReplace = oldProcess.steps.firstWhereOrNull(
+              (s) => s.text == newStep.text,
+            );
+            return stepToReplace == null
+                ? newStep
+                : newStep.copyWith(
+                  id: stepToReplace.id,
+                  done: stepToReplace.done,
+                );
           }).toList();
       process = process.copyWith(steps: newSteps);
     }
-    final newState = state.where((p) => p.id != process.id).toList();
-    state = [...newState, process];
+    state = [...state.where((p) => p.id != process.id), process];
   }
 
-  removeProcess(List<String> processIds) {
+  remove(List<String> processIds) {
     state = state.where((process) => !processIds.contains(process.id)).toList();
   }
 }
@@ -149,7 +181,7 @@ class UserController extends _$UserController {
     );
   }
 
-  updateUser(models.User user) {
+  update(models.User user) {
     state = user;
     final prefs = ref
         .watch(prefsProvider)
@@ -160,93 +192,20 @@ class UserController extends _$UserController {
     }
   }
 
-  cleanUser() {
+  clear() {
     state = models.User.empty();
   }
 }
 
 @riverpod
-Future<SharedPreferences> prefs(Ref ref) async {
-  return await SharedPreferences.getInstance();
-}
-
-@riverpod
-Dio dio(Ref ref) {
-  final baseUrl = ref.watch(baseUrlProvider);
-  return Dio(
-    BaseOptions(
-      baseUrl: baseUrl,
-      connectTimeout: const Duration(seconds: 3),
-      receiveTimeout: const Duration(seconds: 3),
-    ),
-  );
-}
-
-@riverpod
-Future<Database> database(Ref ref) async {
-  final directory = await getApplicationDocumentsDirectory();
-
-  if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  }
-
-  return openDatabase(
-    "${directory.path}/processes.db",
-    version: 1,
-    onCreate: (db, version) {
-      db.execute("""
-            CREATE TABLE IF NOT EXISTS processes (
-                id TEXT PRIMARY KEY,
-                name TEXT,
-                description TEXT,
-                isMandatory BOOLEAN,
-                processType TEXT,
-                timeNeeded INTEGER,
-                groupName TEXT,
-                deadline TEXT,
-                assignedAt TEXT,
-                owner TEXT,
-                editAt TEXT
-            )
-            """);
-      db.execute("""
-            CREATE TABLE IF NOT EXISTS steps (
-                id TEXT PRIMARY KEY,
-                text TEXT,
-                done INTEGER,
-                isMandatory INTEGER,
-                processId TEXT,
-                FOREIGN KEY (processId) REFERENCES processes (id)
-                )
-        """);
-      db.execute("""
-            CREATE TABLE IF NOT EXISTS deletedProcesses (
-                id TEXT PRIMARY KEY
-            )
-        """);
-    },
-  );
-}
-
-@riverpod
 class EventController extends _$EventController {
   @override
-  List<Event> build() {
-    return [];
-  }
+  List<models.Event> build() => [];
 
-  addEvent(Event event) {
+  add(models.Event event) {
     state = [...state, event];
   }
-
-  cleanEvents() {
+  clear() {
     state = [];
   }
-}
-
-@riverpod
-List<DateTime> deadlines(Ref ref) {
-  final processList = ref.watch(processListProvider);
-  return processList.map((process) => process.deadline).toList();
 }

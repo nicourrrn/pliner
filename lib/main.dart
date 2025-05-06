@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import "package:flutter_hooks/flutter_hooks.dart";
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import "package:go_router/go_router.dart";
-import "package:self_process_manager/watchers.dart";
 import "./theme.dart";
 import "./screens.dart";
 import "./collectors.dart";
@@ -22,7 +21,7 @@ final _routerProvider = Provider<GoRouter>(
         path: '/',
         builder:
             (context, state) =>
-                isDesktop(context) ? MyDesktopHomePage() : const MyHomePage(),
+                isLowWidthSize(context) ? const ProcessListScreen() : SplitedScreen(),
       ),
       GoRoute(
         path: "/process/create",
@@ -32,9 +31,9 @@ final _routerProvider = Provider<GoRouter>(
         path: "/process/:processId",
         builder: (context, state) {
           final processId = state.pathParameters['processId']!;
-          return isDesktop(context)
-              ? const MyDesktopHomePage()
-              : ProcessDetailView(processId: processId);
+          return isLowWidthSize(context)
+              ? ProcessDetailView(processId: processId)
+              : const SplitedScreen();
         },
       ),
       GoRoute(
@@ -78,8 +77,8 @@ class MyApp extends HookConsumerWidget {
     }, []);
 
     return MaterialApp.router(
-      title: 'Task manager',
-      theme: isDesktop(context) ? desctopTheme : mobileTheme,
+      title: 'Pliner',
+      theme: isDesktop() ? desctopTheme : mobileTheme,
       routerConfig: ref.watch(_routerProvider),
     );
   }
