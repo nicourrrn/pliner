@@ -53,7 +53,6 @@ signupFromServer(Dio dio, String username, String password) async {
 
 //      Get
 
-
 Future<List<Process>> loadProcessFromServer(Dio dio, String username) async {
   final resp = await dio.get("processes/user/$username");
   final List<dynamic> jsonList = resp.data;
@@ -96,7 +95,7 @@ updateProcessStepsFromServer(
 }
 
 deletedProcessesToServer(Dio dio, List<String> processIds) async {
-  await dio.post("processes/deleted", data: processIds);
+  await dio.post("processes/deleted", data: jsonEncode(processIds));
 }
 
 // SQLite part
@@ -151,14 +150,12 @@ Future<List<Process>> loadProcessesFromSqlite(Database db) async {
   return processes.map((t) => Process.fromJson(t)).toList();
 }
 
-
 Future<List<String>> getDeletedProcessesFromSqlite(Database db) async {
   final rawProcesses = await db.query('deletedProcesses');
   return rawProcesses.map((e) => e['id'].toString()).toList();
 }
 
 //      Post
-
 
 createProcessFromSqlite(Database db, Process process) {
   var processJson = process.toJson();
@@ -195,4 +192,3 @@ updateProcessStepsFromSqlite(Database db, String processId, List<Step> steps) {
     db.update('steps', step.toJson(), where: 'id = ?', whereArgs: [step.id]);
   }
 }
-
