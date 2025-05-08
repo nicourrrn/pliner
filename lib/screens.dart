@@ -40,7 +40,6 @@ class ProcessListScreen extends HookConsumerWidget {
   const ProcessListScreen({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final heightIndicator = useState(0.0);
     final searchFocusNode = useFocusNode();
     final searchActive = useState(false);
 
@@ -83,12 +82,13 @@ class ProcessListScreen extends HookConsumerWidget {
             IconButton(
               icon: const Icon(Icons.delete),
               onPressed: () {
-                final toDelete = ref.read(selectedProcessesProvider);
-                for (final process in toDelete) {
-                  ref
-                      .read(eventControllerProvider.notifier)
-                      .add(Event.deleteProcess(process));
-                }
+                ref
+                    .read(selectedProcessesProvider)
+                    .forEach(
+                      (p) => ref
+                          .read(eventControllerProvider.notifier)
+                          .add(Event.deleteProcess(p)),
+                    );
                 ref.read(selectedProcessesProvider.notifier).clear();
               },
             ),
@@ -100,58 +100,27 @@ class ProcessListScreen extends HookConsumerWidget {
               onPressed: () async {
                 try {
                   final dio = ref.read(dioProvider);
-                  final localProcesses = ref.read(processListProvider);
-                  final username = ref.read(userControllerProvider).username;
-                  final db = await ref.read(databaseProvider.future);
-
-                  final deletedProcesses = await getDeletedProcessesFromSqlite(
-                    db,
+                  final serverStatus = await pingServer(dio);
+                  CommunicationService.showSnackbarAfterLastFrame(
+                    ref,
+                    serverStatus ? "Sync completed" : "Server is down",
                   );
-                  await deletedProcessesToServer(dio, deletedProcesses);
 
-                  for (final process in localProcesses) {
-                    await createProcessFromServer(dio, process, username);
-                  }
+                  if (!serverStatus) return;
 
-                  final serverProcesses = await loadProcessFromServer(
+                  await for (final event in syncWithServer(
                     dio,
-                    username,
-                  );
-
-                  final eventNotifier = ref.read(
-                    eventControllerProvider.notifier,
-                  );
-                  eventNotifier.clear();
-
-                  for (final serverProcess in serverProcesses) {
-                    final containLocalProcess = localProcesses.contains(
-                      serverProcess,
-                    );
-                    if (!containLocalProcess) {
-                      eventNotifier.add(
-                        CreateProcessEvent(serverProcess, username),
-                      );
-                    } else if (localProcesses
-                        .firstWhere((p) => p.id == serverProcess.id)
-                        .editAt
-                        .isBefore(serverProcess.editAt)) {
-                      eventNotifier.add(UpdateProcessEvent(serverProcess));
-                    }
-                  }
-
-                  final deletedProcessIds = await deletedProcessFromServer(dio);
-                  final localProcessIds = localProcesses.map((p) => p.id);
-                  for (final process in deletedProcessIds) {
-                    if (localProcessIds.contains(process)) {
-                      eventNotifier.add(DeleteProcessEvent(process));
-                    }
+                    await ref.read(databaseProvider.future),
+                    ref.read(userControllerProvider).username,
+                    ref.read(processListProvider),
+                  )) {
+                    ref.read(eventControllerProvider.notifier).add(event);
                   }
                 } catch (e) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    showDialog(
-                      context: context,
-                      builder: (context) =>  DefaultAlertWidget(error: e.toString())                   );
-                  });
+                  CommunicationService.showDialogAfterLastFrame(
+                    e.toString(),
+                    "Sync failed",
+                  );
                 }
               },
             ),
@@ -196,67 +165,77 @@ class ProcessListScreen extends HookConsumerWidget {
                                 SortBy.deadline;
                           },
                         ),
+                        FilterChip(
+                          label: const Text("Last Edit"),
+                          onSelected: (value) {
+                            ref.read(sortByProvider.notifier).state =
+                                SortBy.editAt;
+                          },
+                        ),
                       ],
                     ),
-                    const Text("Group"),
-                    GroupChips(),
                   ],
                 ),
               ),
-            if (isDesktop()) ...[
-              const Gap(8.0),
-              OutlinedButton(
-                onPressed: () => context.push("/process/create"),
-                child: const Text("New process"),
-              ),
-            ],
-            const Gap(8.0),
-            Expanded(
-              child: NotificationListener<ScrollNotification>(
-                onNotification: (notification) {
-                  if (notification is OverscrollNotification) {
-                    heightIndicator.value -= notification.overscroll * 0.90;
-                    if (heightIndicator.value < 0) {
-                      heightIndicator.value = 0;
-                    } else if (heightIndicator.value > 100) {
-                      heightIndicator.value = 100;
-                    }
-                  }
+            Expanded(child: ListWithAnimatedHeader()),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-                  if (notification is ScrollEndNotification) {
-                    if (heightIndicator.value == 100) {
-                      context.push("/process/create");
-                    }
-                    heightIndicator.value = 0;
-                  }
+class ListWithAnimatedHeader extends HookConsumerWidget {
+  const ListWithAnimatedHeader({super.key});
+  static const maxHeaderHeight = 100.0;
 
-                  return false;
-                },
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scrollController = useScrollController();
+    final overscrollExtent = useState(0.0);
 
-                child: ListView.builder(
-                  itemCount: ref.watch(sortedProcessProvider).length + 1,
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 70),
-                        curve: Curves.easeInOut,
-                        height: heightIndicator.value,
-                        width: double.infinity,
-                        alignment: Alignment.topCenter,
-                        child: Text(
-                          "✍️New",
-                          style: Theme.of(context).textTheme.bodyLarge,
-                        ),
-                      );
-                    }
-                    final process = ref.watch(sortedProcessProvider)[index - 1];
-                    return ProcessListTile(processId: process.id);
-                  },
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        return false;
+      },
+
+      child: Stack(
+        children: [
+          ListView.builder(
+            controller: scrollController,
+            itemCount: ref.watch(sortedProcessProvider).length + 1,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return true // isDesktop()
+                    ? Align(
+                      alignment: Alignment.center,
+                      child: TextButton.icon(
+                        onPressed: () => context.push("/process/create"),
+                        icon: const Icon(Icons.add),
+                        label: const Text("New process"),
+                      ),
+                    )
+                    : const SizedBox.shrink();
+              }
+              final process = ref.watch(sortedProcessProvider)[index - 1];
+              return ProcessListTile(processId: process.id);
+            },
+          ),
+
+          if (overscrollExtent.value > 0)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: maxHeaderHeight - overscrollExtent.value,
+                color: Theme.of(context).colorScheme.primary,
+                child: const Center(
+                  child: Text("✍️ New", style: TextStyle(color: Colors.white)),
                 ),
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -292,14 +271,13 @@ class ProcessDetailView extends HookConsumerWidget {
             ),
           IconButton(
             icon: const Icon(Icons.copy),
-            onPressed: () async {
+            onPressed: () async =>
               await Clipboard.setData(
                 ClipboardData(
                   text:
                       "${processToText(process)}\nDeadline: ${formatDate(process.deadline, [yyyy, '-', mm, '-', dd])}",
                 ),
-              );
-            },
+              )
           ),
         ],
       ),
@@ -419,8 +397,23 @@ class ProcessCreateView extends HookConsumerWidget {
 
       return () => textEditingController.removeListener(listener);
     }, [textEditingController]);
-
     final username = ref.read(userControllerProvider).username;
+
+    createProcess(bool isMandatory) {
+                    process.value = process.value.copyWith(
+                      isMandatory: isMandatory,
+                      editAt: DateTime.now(),
+                    );
+                    final event =
+                        (processId != null)
+                            ? Event.updateProcess(process.value)
+                            : Event.createProcess(process.value, username);
+                    ref.read(eventControllerProvider.notifier).add(event);
+
+                    context.pop();
+    }
+    
+
     return Scaffold(
       appBar: AppBar(title: const Text('Create Process')),
       body: Padding(
@@ -448,8 +441,6 @@ class ProcessCreateView extends HookConsumerWidget {
                 focusNode,
                 onFieldSubmitted,
               ) {
-                textEditingController.text = process.value.groupName;
-
                 return TextField(
                   controller: textEditingController,
                   focusNode: focusNode,
@@ -481,36 +472,12 @@ class ProcessCreateView extends HookConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 ElevatedButton(
-                  onPressed: () {
-                    process.value = process.value.copyWith(
-                      isMandatory: false,
-                      editAt: DateTime.now(),
-                    );
-                    final event =
-                        (processId != null)
-                            ? Event.updateProcess(process.value)
-                            : Event.createProcess(process.value, username);
-                    ref.read(eventControllerProvider.notifier).add(event);
-
-                    context.pop();
-                  },
+                  onPressed: () => createProcess(false),
                   child: const Text('To not mendatory'),
                 ),
                 const Gap(8.0),
                 ElevatedButton(
-                  onPressed: () {
-                    process.value = process.value.copyWith(
-                      isMandatory: true,
-                      editAt: DateTime.now(),
-                    );
-                    final event =
-                        (processId != null)
-                            ? Event.updateProcess(process.value)
-                            : Event.createProcess(process.value, username);
-                    ref.read(eventControllerProvider.notifier).add(event);
-
-                    context.pop();
-                  },
+                  onPressed: () => createProcess(true),
                   child: const Text('To mendatory'),
                 ),
               ],
@@ -609,8 +576,7 @@ class SettingScreen extends HookConsumerWidget {
         title: Text("Setting"),
         actions: [
           IconButton(
-            onPressed:
-                () => ref.read(userControllerProvider.notifier).clear(),
+            onPressed: () => ref.read(userControllerProvider.notifier).clear(),
             icon: const Icon(Icons.logout),
           ),
           UpdateAppButton(),

@@ -52,8 +52,8 @@ List<Process> sortProcesses(List<Process> processes, SortBy sortBy) {
       return processes.sorted((a, b) => a.name.compareTo(b.name));
     case SortBy.deadline:
       return processes.sorted((a, b) => a.deadline.compareTo(b.deadline));
-    case SortBy.group:
-      return processes.sorted((a, b) => a.groupName.compareTo(b.groupName));
+    case SortBy.editAt:
+      return processes.sorted((a, b) => a.editAt.compareTo(b.editAt));
   }
 }
 
@@ -61,13 +61,9 @@ List<Process> sortProcesses(List<Process> processes, SortBy sortBy) {
 List<Process> sortedProcess(Ref ref) {
   final processes = ref.watch(processListProvider);
   final sortBy = ref.watch(sortByProvider);
-  final selectedGroups = ref.watch(selectedGroupsProvider);
   final nameFilter = ref.watch(processNameFilterProvider);
 
-  return sortProcesses(
-    filterByName(filterByGroup(processes, selectedGroups), nameFilter),
-    sortBy,
-  );
+  return sortProcesses(filterByName(processes, nameFilter), sortBy);
 }
 
 @riverpod

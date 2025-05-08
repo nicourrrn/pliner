@@ -68,49 +68,42 @@ class ProcessListTile extends HookConsumerWidget {
     final color = useState(Colors.grey[100]);
 
     color.value =
-        selectedProcesses.contains(processId)
-            ? Colors.red[400]
-            : Colors.grey[100];
+        selectedProcesses.contains(processId) ? Colors.red[400] : null;
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            color.value!,
-            Theme.of(context).canvasColor,
-            Theme.of(context).canvasColor,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+    final processDone = process.steps.any((step) => step.done);
+    final icon =
+        processDone
+            ? const Icon(Icons.check_circle, color: Colors.green)
+            : process.isMandatory
+            ? const Icon(Icons.priority_high, color: Colors.red)
+            : const Icon(Icons.priority_high, color: Colors.grey);
+
+    return ListTile(
+      title: Text(
+        process.name,
+        style: TextStyle(
+          decoration: processDone ? TextDecoration.lineThrough : null,
         ),
       ),
-      child: ListTile(
-        title: Text(process.name),
-        subtitle: Text(process.groupName),
-        leading:
-            process.isMandatory
-                ? const Icon(Icons.priority_high, color: Colors.red)
-                : const Icon(Icons.priority_high, color: Colors.grey),
-        trailing: Text(
-          process.deadline.difference(DateTime.now()).inDays.toString(),
-        ),
-        onTap: () {
-          if (selectedProcesses.isNotEmpty) {
-            ref
-                .read(selectedProcessesProvider.notifier)
-                .toggleProcess(process.id);
-          } else {
-            ref.read(choosedProcessProvider.notifier).state = process.id;
-            if (isLowWidthSize(context)) context.push("/process/${process.id}");
-          }
-        },
-        tileColor: color.value,
-        onLongPress: () {
+      subtitle: Text(process.groupName),
+      leading: icon,
+      trailing: Text(
+        process.deadline.difference(DateTime.now()).inDays.toString(),
+      ),
+      onTap: () {
+        if (selectedProcesses.isNotEmpty) {
           ref
               .read(selectedProcessesProvider.notifier)
               .toggleProcess(process.id);
-        },
-      ),
+        } else {
+          ref.read(choosedProcessProvider.notifier).state = process.id;
+          if (isLowWidthSize(context)) context.push("/process/${process.id}");
+        }
+      },
+      tileColor: color.value,
+      onLongPress: () {
+        ref.read(selectedProcessesProvider.notifier).toggleProcess(process.id);
+      },
     );
   }
 }
@@ -158,26 +151,4 @@ class UpdateAppButton extends HookConsumerWidget {
       icon: const Icon(Icons.update),
     );
   }
-}
-
-class DefaultAlertWidget extends HookConsumerWidget {
-    const DefaultAlertWidget({super.key, required this.error});
-
-    final String error;
-
-    @override
-      Widget build(BuildContext context, WidgetRef ref) => 
-                           AlertDialog(
-                            title: const Text("Error"),
-                            content: Text(
-                              "Failed to load processes with error $error",
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => context.pop(),
-                                child: const Text("OK"),
-                              ),
-                            ],
-                          );
-
 }

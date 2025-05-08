@@ -1,4 +1,6 @@
 import 'dart:io';
+import "package:flutter/material.dart";
+import "package:go_router/go_router.dart";
 import "package:self_process_manager/sources.dart";
 import "package:self_process_manager/theme.dart";
 import "package:shared_preferences/shared_preferences.dart";
@@ -205,7 +207,49 @@ class EventController extends _$EventController {
   add(models.Event event) {
     state = [...state, event];
   }
+
   clear() {
     state = [];
+  }
+}
+
+class CommunicationService {
+  static final navigatorKey = GlobalKey<NavigatorState>();
+
+  static showDialogAfterLastFrame(String message, String title) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = navigatorKey.currentContext;
+      if (context != null && context.mounted) {
+        showDialog(
+          context: context,
+          builder:
+              (context) => AlertDialog(
+                title: Text(title),
+                content: Text(message),
+                actions: [
+                  TextButton(
+                    onPressed: () => context.pop(),
+                    child: const Text("Ok"),
+                  ),
+                ],
+              ),
+        );
+      }
+    });
+  }
+
+  static showSnackbarAfterLastFrame(WidgetRef ref, String message) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = navigatorKey.currentContext;
+      if (context != null && context.mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    });
   }
 }

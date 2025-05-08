@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:collection/collection.dart';
 import 'package:path_provider/path_provider.dart';
 import "package:dio/dio.dart";
 import "package:sqflite/sqflite.dart";
@@ -34,6 +35,35 @@ Future<List<Process>> loadProcessFromFile() async {
 // Server part
 
 //      Utils
+
+Stream<Event> syncWithServer(
+  Dio dio,
+  Database db,
+  String username,
+  List<Process> processes,
+) async* {
+  await deletedProcessesToServer(dio, await getDeletedProcessesFromSqlite(db));
+  for (final process in processes) {
+    await createProcessFromServer(dio, process, username);
+  }
+  final serverProcesses = await loadProcessFromServer(dio, username);
+  for (final process in serverProcesses) {
+    final localProcess = processes.firstWhereOrNull((p) => p.id == process.id);
+    if (localProcess == null) {
+      yield Event.createProcess(process, username);
+    } else if (process.editAt.isAfter(localProcess.editAt)) {
+      yield Event.updateProcess(process);
+    }
+  }
+  final deletedProcessIds = await deletedProcessFromServer(dio);
+  for (final processId in deletedProcessIds) {
+    final localProcess = processes.firstWhereOrNull((p) => p.id == processId);
+    if (localProcess != null) {
+      yield Event.deleteProcess(processId);
+    }
+  }
+}
+
 Future<bool> pingServer(Dio dio) async {
   try {
     await dio.get("ping");

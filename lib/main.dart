@@ -15,13 +15,16 @@ main() async {
 final _routerProvider = Provider<GoRouter>(
   (ref) => GoRouter(
     initialLocation: "/",
+    navigatorKey: CommunicationService.navigatorKey,
 
     routes: [
       GoRoute(
         path: '/',
         builder:
             (context, state) =>
-                isLowWidthSize(context) ? const ProcessListScreen() : SplitedScreen(),
+                isLowWidthSize(context)
+                    ? const ProcessListScreen()
+                    : SplitedScreen(),
       ),
       GoRoute(
         path: "/process/create",

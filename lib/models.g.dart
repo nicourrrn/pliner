@@ -10,7 +10,7 @@ Process _$ProcessFromJson(Map<String, dynamic> json) => Process(
   id: json['id'] as String,
   name: json['name'] as String,
   description: json['description'] as String,
-  isMandatory: _intToBoolean((json['isMandatory'] as num).toInt()),
+  isMandatory: _intToBoolean(json['isMandatory']),
   processType: $enumDecode(_$ProcessTypeEnumMap, json['processType']),
   groupName: json['groupName'] as String,
   timeNeeded: Duration(microseconds: (json['timeNeeded'] as num).toInt()),
@@ -45,8 +45,8 @@ const _$ProcessTypeEnumMap = {
 Step _$StepFromJson(Map<String, dynamic> json) => Step(
   id: json['id'] as String,
   text: json['text'] as String,
-  done: _intToBoolean((json['done'] as num).toInt()),
-  isMandatory: _intToBoolean((json['isMandatory'] as num).toInt()),
+  done: _intToBoolean(json['done']),
+  isMandatory: _intToBoolean(json['isMandatory']),
 );
 
 Map<String, dynamic> _$StepToJson(Step instance) => <String, dynamic>{

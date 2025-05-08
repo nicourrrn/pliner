@@ -8,7 +8,7 @@ import "./sources.dart";
 part 'models.g.dart';
 part 'models.freezed.dart';
 
-enum SortBy { name, deadline, group }
+enum SortBy { name, deadline, editAt }
 
 enum ProcessType {
   parallel("Parallel"),
@@ -18,8 +18,13 @@ enum ProcessType {
   const ProcessType(this.name);
 }
 
-int _booleanToInt(bool value) => value ? 1 : 0;
-bool _intToBoolean(int value) => value == 1;
+int _booleanToInt(dynamic value) =>
+    value is bool
+        ? value
+            ? 1
+            : 0
+        : value;
+bool _intToBoolean(dynamic value) => value is int ? value == 1 : value;
 
 @freezed
 @JsonSerializable()
