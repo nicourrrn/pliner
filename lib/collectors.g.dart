@@ -81,7 +81,7 @@ final sortedProcessProvider = AutoDisposeProvider<List<Process>>.internal(
 // ignore: unused_element
 typedef SortedProcessRef = AutoDisposeProviderRef<List<Process>>;
 String _$syncEventsWithDatabaseHash() =>
-    r'1fb17b47c6fa3e1bc0fcc12a8e3a282db7d59661';
+    r'81e8ff8f4365eb01810f71dfcf84d0722d6a9790';
 
 /// See also [syncEventsWithDatabase].
 @ProviderFor(syncEventsWithDatabase)

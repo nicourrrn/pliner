@@ -70,6 +70,16 @@ Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
   'isLoggedIn': instance.isLoggedIn,
 };
 
+EditAt _$EditAtFromJson(Map<String, dynamic> json) => EditAt(
+  id: json['id'] as String,
+  editAt: DateTime.parse(json['editAt'] as String),
+);
+
+Map<String, dynamic> _$EditAtToJson(EditAt instance) => <String, dynamic>{
+  'id': instance.id,
+  'editAt': instance.editAt.toIso8601String(),
+};
+
 CreateProcessEvent _$CreateProcessEventFromJson(Map<String, dynamic> json) =>
     CreateProcessEvent(
       Process.fromJson(json['process'] as Map<String, dynamic>),

@@ -104,7 +104,7 @@ final selectedProcessesProvider =
     );
 
 typedef _$SelectedProcesses = AutoDisposeNotifier<List<String>>;
-String _$processListHash() => r'70acd64629f7614b0fa745d1123d9ce5b64cb0fd';
+String _$processListHash() => r'2e3d175d34bc0fadaf40a9925152f030dc18cdf8';
 
 /// See also [ProcessList].
 @ProviderFor(ProcessList)

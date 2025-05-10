@@ -42,25 +42,50 @@ Stream<Event> syncWithServer(
   String username,
   List<Process> processes,
 ) async* {
-  await deletedProcessesToServer(dio, await getDeletedProcessesFromSqlite(db));
-  for (final process in processes) {
-    await createProcessFromServer(dio, process, username);
-  }
-  final serverProcesses = await loadProcessFromServer(dio, username);
-  for (final process in serverProcesses) {
-    final localProcess = processes.firstWhereOrNull((p) => p.id == process.id);
-    if (localProcess == null) {
-      yield Event.createProcess(process, username);
-    } else if (process.editAt.isAfter(localProcess.editAt)) {
-      yield Event.updateProcess(process);
-    }
-  }
   final deletedProcessIds = await deletedProcessFromServer(dio);
   for (final processId in deletedProcessIds) {
     final localProcess = processes.firstWhereOrNull((p) => p.id == processId);
     if (localProcess != null) {
       yield Event.deleteProcess(processId);
     }
+  }
+  await deletedProcessesToServer(dio, await getDeletedProcessesFromSqlite(db));
+
+  var editAtMap = <String, DateTime>{};
+  for (final editAt in await editAtListFromServer(dio, username)) {
+    editAtMap[editAt.id] = editAt.editAt;
+  }
+
+  await updateProcessFromServer(
+    dio,
+    processes
+        .where(
+          (p) =>
+              editAtMap.containsKey(p.id) &&
+              editAtMap[p.id]!.isBefore(p.editAt),
+        )
+        .toList(),
+    username,
+  );
+
+  await createProcessFromServer(
+    dio,
+    processes.where((p) => !editAtMap.containsKey(p.id)).toList(),
+    username,
+  );
+
+  final toUpdateFromServer = processes.where(
+    (p) => editAtMap.containsKey(p.id) && editAtMap[p.id]!.isAfter(p.editAt),
+  );
+  for (final process in toUpdateFromServer) {
+    yield Event.updateProcess(await getProcessFromServer(dio, process.id));
+  }
+
+  final toLoadFromServer = editAtMap.keys.where(
+    (id) => !processes.any((p) => p.id == id),
+  );
+  for (final id in toLoadFromServer) {
+    yield Event.createProcess(await getProcessFromServer(dio, id), username);
   }
 }
 
@@ -84,33 +109,57 @@ signupFromServer(Dio dio, String username, String password) async {
 //      Get
 
 Future<List<Process>> loadProcessFromServer(Dio dio, String username) async {
-  final resp = await dio.get("processes/user/$username");
+  final resp = await dio.get(
+    "processes/",
+    queryParameters: {"owner": username},
+  );
   final List<dynamic> jsonList = resp.data;
   return jsonList.map((json) => Process.fromJson(json)).toList();
 }
 
 Future<List<String>> deletedProcessFromServer(Dio dio) async {
-  final response = await dio.get("processes/deleted");
+  final response = await dio.get("processes/deleted/");
   final List<dynamic> jsonList = response.data;
   return jsonList.map((json) => json.toString()).toList();
 }
 
-//      Post
+Future<List<EditAt>> editAtListFromServer(Dio dio, String owner) async {
+  final response = await dio.get(
+    "processes/last_edites",
+    queryParameters: {"owner": owner},
+  );
+  final List<dynamic> jsonList = response.data;
+  return jsonList.map((json) => EditAt.fromJson(json)).toList().cast<EditAt>();
+}
 
-createProcessFromServer(Dio dio, Process process, String owner) async {
+Future<Process> getProcessFromServer(Dio dio, String processId) async {
+  final response = await dio.get("processes/$processId/");
+  return Process.fromJson(response.data);
+}
+
+//      Post
+createProcessFromServer(Dio dio, List<Process> processes, String owner) async {
   await dio.post(
     "processes/",
-    data: process.toJson(),
+    data: processes.map((process) => process.toJson()).toList(),
     queryParameters: {"owner": owner},
+  );
+}
+
+updateProcessFromServer(
+  Dio dio,
+  List<Process> processes,
+  String username,
+) async {
+  await dio.put(
+    "processes/",
+    data: processes.map((p) => p.toJson()).toList(),
+    queryParameters: {"owner": username},
   );
 }
 
 deleteProcessFromServer(Dio dio, String processId) async {
   await dio.delete("processes/$processId");
-}
-
-updateProcessFromServer(Dio dio, Process process) async {
-  await dio.put("processes/", data: process.toJson());
 }
 
 updateProcessStepsFromServer(
@@ -125,7 +174,7 @@ updateProcessStepsFromServer(
 }
 
 deletedProcessesToServer(Dio dio, List<String> processIds) async {
-  await dio.post("processes/deleted", data: jsonEncode(processIds));
+  await dio.delete("processes/", data: jsonEncode(processIds));
 }
 
 // SQLite part

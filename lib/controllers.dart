@@ -1,4 +1,3 @@
-import 'dart:io';
 import "package:flutter/material.dart";
 import "package:go_router/go_router.dart";
 import "package:self_process_manager/sources.dart";
@@ -8,7 +7,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import "package:dio/dio.dart";
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:flutter/foundation.dart';
 import "package:path_provider/path_provider.dart";
 import "package:collection/collection.dart";
 import "./collectors.dart";
@@ -130,7 +128,7 @@ class ProcessList extends _$ProcessList {
       ...state.map(
         (process) =>
             (process.id == processId)
-                ? process.copyWith(steps: steps)
+                ? process.copyWith(steps: steps, editAt: DateTime.now())
                 : process,
       ),
     ];
@@ -155,7 +153,7 @@ class ProcessList extends _$ProcessList {
                   done: stepToReplace.done,
                 );
           }).toList();
-      process = process.copyWith(steps: newSteps);
+      process = process.copyWith(steps: newSteps, editAt: DateTime.now());
     }
     state = [...state.where((p) => p.id != process.id), process];
   }

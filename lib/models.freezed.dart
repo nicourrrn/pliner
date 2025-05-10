@@ -598,4 +598,67 @@ as List<Step>,
 
 }
 
+
+/// @nodoc
+mixin _$EditAt {
+
+ String get id; DateTime get editAt;
+/// Create a copy of EditAt
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$EditAtCopyWith<EditAt> get copyWith => _$EditAtCopyWithImpl<EditAt>(this as EditAt, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is EditAt&&(identical(other.id, id) || other.id == id)&&(identical(other.editAt, editAt) || other.editAt == editAt));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,id,editAt);
+
+@override
+String toString() {
+  return 'EditAt(id: $id, editAt: $editAt)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $EditAtCopyWith<$Res>  {
+  factory $EditAtCopyWith(EditAt value, $Res Function(EditAt) _then) = _$EditAtCopyWithImpl;
+@useResult
+$Res call({
+ String id, DateTime editAt
+});
+
+
+
+
+}
+/// @nodoc
+class _$EditAtCopyWithImpl<$Res>
+    implements $EditAtCopyWith<$Res> {
+  _$EditAtCopyWithImpl(this._self, this._then);
+
+  final EditAt _self;
+  final $Res Function(EditAt) _then;
+
+/// Create a copy of EditAt
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? editAt = null,}) {
+  return _then(EditAt(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,editAt: null == editAt ? _self.editAt : editAt // ignore: cast_nullable_to_non_nullable
+as DateTime,
+  ));
+}
+
+}
+
+
 // dart format on

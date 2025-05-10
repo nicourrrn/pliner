@@ -69,11 +69,9 @@ List<Process> sortedProcess(Ref ref) {
 @riverpod
 syncEventsWithDatabase(Ref ref) async {
   final db = await ref.read(databaseProvider.future);
-  final dio = ref.read(dioProvider);
   ref.listen<List<Event>>(eventControllerProvider, (prev, next) async {
     for (final event in next) {
       handleEventOnLocal(event, db);
-      if (await pingServer(dio)) handleEventOnServer(event, dio);
     }
   });
 }

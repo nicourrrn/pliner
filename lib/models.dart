@@ -2,7 +2,6 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:uuid/uuid.dart';
 import "package:sqflite/sqflite.dart";
 import "package:json_annotation/json_annotation.dart";
-import "package:dio/dio.dart";
 import "./sources.dart";
 
 part 'models.g.dart';
@@ -144,23 +143,6 @@ handleEventOnLocal(Event event, Database db) async {
   }
 }
 
-handleEventOnServer(Event event, Dio dio) async {
-  switch (event) {
-    case CreateProcessEvent(:final process, :final owner):
-      await createProcessFromServer(dio, process, owner);
-      break;
-    case DeleteProcessEvent(:final processId):
-      await deleteProcessFromServer(dio, processId);
-      break;
-    case UpdateProcessEvent(:final process):
-      await updateProcessFromServer(dio, process);
-      break;
-    case UpdateProcessStepsEvent(:final processId, :final steps):
-      await updateProcessStepsFromServer(dio, processId, steps);
-      break;
-  }
-}
-
 String processToText(Process process) {
   var text =
       "${process.name} +${process.deadline.difference(DateTime.now()).inDays}d +${process.timeNeeded.inHours}h${process.processType == ProcessType.focus ? "f" : "p"}\n";
@@ -219,23 +201,28 @@ Process processFromText(
         )
         .join("\n");
     newSteps =
-        lines.where((line) => line.startsWith("-") || line.startsWith("+")).map(
-          (line) {
-            var step = steps.firstWhere(
-              (s) => s.text == line.substring(1).trim(),
-              orElse:
-                  () => Step(
-                    id: Uuid().v1(),
-                    text: line.substring(1).trim(),
-                    done: false,
-                    isMandatory: line.startsWith("-") ? true : false,
-                  ),
-            );
-            return step.copyWith(
-              isMandatory: line.startsWith("-") ? true : false,
-            );
-          },
-        ).toList();
+        lines
+            .where(
+              (line) =>
+                  (line.startsWith("-") || line.startsWith("+")) &&
+                  line.length > 3,
+            )
+            .map((line) {
+              var step = steps.firstWhere(
+                (s) => s.text == line.substring(1).trim(),
+                orElse:
+                    () => Step(
+                      id: Uuid().v1(),
+                      text: line.substring(1).trim(),
+                      done: false,
+                      isMandatory: line.startsWith("-") ? true : false,
+                    ),
+              );
+              return step.copyWith(
+                isMandatory: line.startsWith("-") ? true : false,
+              );
+            })
+            .toList();
   }
 
   return Process(
@@ -251,4 +238,14 @@ Process processFromText(
     editAt: DateTime.now(),
     steps: newSteps,
   );
+}
+
+@freezed
+@JsonSerializable()
+class EditAt with _$EditAt {
+  EditAt({required this.id, required this.editAt});
+  final String id;
+  final DateTime editAt;
+  factory EditAt.fromJson(Map<String, dynamic> json) => _$EditAtFromJson(json);
+  Map<String, dynamic> toJson() => _$EditAtToJson(this);
 }

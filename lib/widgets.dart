@@ -8,6 +8,19 @@ import "./theme.dart";
 import "./collectors.dart";
 import "./models.dart";
 
+class RedDot extends StatelessWidget {
+  const RedDot({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+    );
+  }
+}
+
 class StepListView extends HookConsumerWidget {
   const StepListView({super.key, required this.processId});
   final String processId;
@@ -70,7 +83,7 @@ class ProcessListTile extends HookConsumerWidget {
     color.value =
         selectedProcesses.contains(processId) ? Colors.red[400] : null;
 
-    final processDone = process.steps.any((step) => step.done);
+    final processDone = process.steps.every((step) => step.done);
     final icon =
         processDone
             ? const Icon(Icons.check_circle, color: Colors.green)
@@ -87,9 +100,12 @@ class ProcessListTile extends HookConsumerWidget {
       ),
       subtitle: Text(process.groupName),
       leading: icon,
-      trailing: Text(
-        process.deadline.difference(DateTime.now()).inDays.toString(),
-      ),
+      trailing:
+          process.deadline.isAfter(DateTime.now())
+              ? Text(
+                process.deadline.difference(DateTime.now()).inDays.toString(),
+              )
+              : const RedDot(),
       onTap: () {
         if (selectedProcesses.isNotEmpty) {
           ref

@@ -271,13 +271,13 @@ class ProcessDetailView extends HookConsumerWidget {
             ),
           IconButton(
             icon: const Icon(Icons.copy),
-            onPressed: () async =>
-              await Clipboard.setData(
-                ClipboardData(
-                  text:
-                      "${processToText(process)}\nDeadline: ${formatDate(process.deadline, [yyyy, '-', mm, '-', dd])}",
+            onPressed:
+                () async => await Clipboard.setData(
+                  ClipboardData(
+                    text:
+                        "${processToText(process)}\nDeadline: ${formatDate(process.deadline, [yyyy, '-', mm, '-', dd])}",
+                  ),
                 ),
-              )
           ),
         ],
       ),
@@ -400,19 +400,18 @@ class ProcessCreateView extends HookConsumerWidget {
     final username = ref.read(userControllerProvider).username;
 
     createProcess(bool isMandatory) {
-                    process.value = process.value.copyWith(
-                      isMandatory: isMandatory,
-                      editAt: DateTime.now(),
-                    );
-                    final event =
-                        (processId != null)
-                            ? Event.updateProcess(process.value)
-                            : Event.createProcess(process.value, username);
-                    ref.read(eventControllerProvider.notifier).add(event);
+      process.value = process.value.copyWith(
+        isMandatory: isMandatory,
+        editAt: DateTime.now(),
+      );
+      final event =
+          (processId != null)
+              ? Event.updateProcess(process.value)
+              : Event.createProcess(process.value, username);
+      ref.read(eventControllerProvider.notifier).add(event);
 
-                    context.pop();
+      context.pop();
     }
-    
 
     return Scaffold(
       appBar: AppBar(title: const Text('Create Process')),
