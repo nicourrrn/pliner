@@ -56,17 +56,15 @@ Stream<Event> syncWithServer(
     editAtMap[editAt.id] = editAt.editAt;
   }
 
-  await updateProcessFromServer(
-    dio,
-    processes
-        .where(
-          (p) =>
-              editAtMap.containsKey(p.id) &&
-              editAtMap[p.id]!.isBefore(p.editAt),
-        )
-        .toList(),
-    username,
-  );
+  final processesToUpdate =
+      processes
+          .where(
+            (p) =>
+                editAtMap.containsKey(p.id) &&
+                editAtMap[p.id]!.isBefore(p.editAt),
+          )
+          .toList();
+  await updateProcessFromServer(dio, processesToUpdate, username);
 
   await createProcessFromServer(
     dio,
