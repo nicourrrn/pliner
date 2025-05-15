@@ -94,7 +94,7 @@ class ProcessListTile extends HookConsumerWidget {
     return ListTile(
       title: Text(
         process.name,
-        style: TextStyle(
+        style: Theme.of(context).textTheme.titleSmall?.apply(
           decoration: processDone ? TextDecoration.lineThrough : null,
         ),
       ),
@@ -165,6 +165,74 @@ class UpdateAppButton extends HookConsumerWidget {
       },
       tooltip: "Update App",
       icon: const Icon(Icons.update),
+    );
+  }
+}
+
+// Use navigationrail
+// class GroupList extends HookConsumerWidget {
+//   const GroupList({super.key});
+//
+//   @override
+//   Widget build(BuildContext context, WidgetRef ref) {
+//     final selectedGroup = ref.watch(selectedGroupProvider);
+//     final processGroups = ref.watch(processGroupsListProvider);
+//
+//     return ListView.builder(
+//       itemCount: processGroups.length,
+//       itemBuilder: (context, index) {
+//         final group = processGroups[index];
+//         return TextButton(
+//           style: ButtonStyle(
+//             backgroundColor: WidgetStateProperty.all(
+//               selectedGroup == group ? Colors.red[400] : null,
+//             ),
+//           ),
+//           child: Column(
+//             children: [
+//               const Icon(Icons.group),
+//               Text(group, style: Theme.of(context).textTheme.labelMedium),
+//             ],
+//           ),
+//           onPressed: () {
+//             ref.read(selectedGroupProvider.notifier).state =
+//                 selectedGroup == group ? null : group;
+//           },
+//         );
+//       },
+//     );
+//   }
+// }
+
+class GroupList extends HookConsumerWidget {
+  const GroupList({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedGroup = ref.watch(selectedGroupProvider);
+    final processGroups = ["All"] + ref.watch(processGroupsListProvider);
+
+    return NavigationRail(
+      extended: isLowWidthSize(context),
+      groupAlignment: -1.0,
+      labelType: NavigationRailLabelType.all,
+      destinations:
+          processGroups
+              .map(
+                (group) => NavigationRailDestination(
+                  icon: const Icon(Icons.group),
+                  label: Text(
+                    group,
+                    style: Theme.of(context).textTheme.labelMedium,
+                  ),
+                ),
+              )
+              .toList(),
+      selectedIndex: processGroups.indexOf(selectedGroup ?? "All"),
+      onDestinationSelected: (index) {
+        ref.read(selectedGroupProvider.notifier).state =
+            index == 0 ? null : processGroups[index];
+      },
     );
   }
 }

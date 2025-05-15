@@ -13,6 +13,11 @@ import "./controllers.dart";
 import "./widgets.dart";
 import "./collectors.dart";
 
+// Desktop
+
+// Mobile
+
+// Semi
 class SplitedScreen extends HookConsumerWidget {
   const SplitedScreen({super.key});
   @override
@@ -137,47 +142,56 @@ class ProcessListScreen extends HookConsumerWidget {
       ),
 
       body: SafeArea(
-        child: Column(
+        child: Row(
           children: [
-            if (searchActive.value)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                width: double.infinity,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Sort by"),
-                    Wrap(
-                      spacing: 8.0,
-                      runSpacing: 8.0,
-                      children: [
-                        FilterChip(
-                          label: const Text("Name"),
-                          onSelected: (value) {
-                            ref.read(sortByProvider.notifier).state =
-                                SortBy.name;
-                          },
-                        ),
-                        FilterChip(
-                          label: const Text("Deadline"),
-                          onSelected: (value) {
-                            ref.read(sortByProvider.notifier).state =
-                                SortBy.deadline;
-                          },
-                        ),
-                        FilterChip(
-                          label: const Text("Last Edit"),
-                          onSelected: (value) {
-                            ref.read(sortByProvider.notifier).state =
-                                SortBy.editAt;
-                          },
-                        ),
-                      ],
+            if (isDesktop()) const GroupList(),
+
+            Expanded(
+              flex: 6,
+              child: Column(
+                children: [
+                  if (searchActive.value)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      width: double.infinity,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("Sort by"),
+                          Wrap(
+                            spacing: 8.0,
+                            runSpacing: 8.0,
+                            children: [
+                              FilterChip(
+                                label: const Text("Name"),
+                                onSelected: (value) {
+                                  ref.read(sortByProvider.notifier).state =
+                                      SortBy.name;
+                                },
+                              ),
+                              FilterChip(
+                                label: const Text("Deadline"),
+                                onSelected: (value) {
+                                  ref.read(sortByProvider.notifier).state =
+                                      SortBy.deadline;
+                                },
+                              ),
+                              FilterChip(
+                                label: const Text("Last Edit"),
+                                onSelected: (value) {
+                                  ref.read(sortByProvider.notifier).state =
+                                      SortBy.editAt;
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
+                  Expanded(child: ListWithAnimatedHeader()),
+                ],
               ),
-            Expanded(child: ListWithAnimatedHeader()),
+            ),
           ],
         ),
       ),

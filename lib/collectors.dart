@@ -16,6 +16,8 @@ Future<List<Process>> databaseProcessList(Ref ref) async {
 @riverpod
 int processesToUpload(Ref ref) => ref.watch(eventControllerProvider).length;
 
+final selectedGroupProvider = StateProvider<String?>((ref) => null);
+
 @riverpod
 List<String> processGroupsList(Ref ref) =>
     ref
@@ -36,7 +38,7 @@ List<Process> filterByName(List<Process> processes, String nameFilter) =>
             )
             .toList();
 
-List<Process> filterByGroup(
+List<Process> filterByGroups(
   List<Process> processes,
   List<String> selectedGroups,
 ) =>
@@ -44,6 +46,13 @@ List<Process> filterByGroup(
         ? processes
         : processes
             .where((process) => selectedGroups.contains(process.groupName))
+            .toList();
+
+List<Process> filterByGroup(List<Process> processes, String? selectedGroup) =>
+    selectedGroup == null
+        ? processes
+        : processes
+            .where((process) => process.groupName == selectedGroup)
             .toList();
 
 List<Process> sortProcesses(List<Process> processes, SortBy sortBy) {
@@ -62,8 +71,12 @@ List<Process> sortedProcess(Ref ref) {
   final processes = ref.watch(processListProvider);
   final sortBy = ref.watch(sortByProvider);
   final nameFilter = ref.watch(processNameFilterProvider);
+  final selectedGroup = ref.watch(selectedGroupProvider);
 
-  return sortProcesses(filterByName(processes, nameFilter), sortBy);
+  return sortProcesses(
+    filterByGroup(filterByName(processes, nameFilter), selectedGroup),
+    sortBy,
+  );
 }
 
 @riverpod
