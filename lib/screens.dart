@@ -388,12 +388,12 @@ class ProcessCreateView extends HookConsumerWidget {
               children: [
                 ElevatedButton(
                   onPressed: () => createProcess(false),
-                  child: const Text('To not mendatory'),
+                  child: const Text('To not mandatory'),
                 ),
                 const Gap(8.0),
                 ElevatedButton(
                   onPressed: () => createProcess(true),
-                  child: const Text('To mendatory'),
+                  child: const Text('To mandatory'),
                 ),
               ],
             ),
