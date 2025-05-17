@@ -23,8 +23,8 @@ final _routerProvider = Provider<GoRouter>(
         builder:
             (context, state) =>
                 isLowWidthSize(context)
-                    ? const ProcessListScreen()
-                    : SplitedScreen(),
+                    ? const ProcessListMobileScreen()
+                    : const ProcessSelectSplitedScreen(),
       ),
       GoRoute(
         path: "/process/create",
@@ -36,7 +36,7 @@ final _routerProvider = Provider<GoRouter>(
           final processId = state.pathParameters['processId']!;
           return isLowWidthSize(context)
               ? ProcessDetailView(processId: processId)
-              : const SplitedScreen();
+              : const ProcessSelectSplitedScreen();
         },
       ),
       GoRoute(

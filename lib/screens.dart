@@ -8,32 +8,27 @@ import 'package:date_format/date_format.dart';
 import "package:self_process_manager/sources.dart";
 
 import "./models.dart";
-import "./theme.dart";
 import "./controllers.dart";
 import "./widgets.dart";
-import "./collectors.dart";
 
-// Desktop
-
-// Mobile
-
-// Semi
-class SplitedScreen extends HookConsumerWidget {
-  const SplitedScreen({super.key});
+// SplitedScreen
+class ProcessSelectSplitedScreen extends HookConsumerWidget {
+  const ProcessSelectSplitedScreen({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final choosedProcess = ref.watch(choosedProcessProvider);
+
     return Scaffold(
       body: Row(
         children: [
-          Expanded(flex: 2, child: const ProcessListScreen()),
-          VerticalDivider(width: 1),
+          const GroupList(),
+          Expanded(flex: 2, child: ProcessListDesktopScreen()),
           Expanded(
             flex: 3,
             child:
                 choosedProcess.isEmpty
                     ? const Center(child: Text("Select process"))
-                    : ProcessDetailView(processId: choosedProcess),
+                    : ProcessDetailViewDesktopScreen(processId: choosedProcess),
           ),
         ],
       ),
@@ -41,157 +36,67 @@ class SplitedScreen extends HookConsumerWidget {
   }
 }
 
-class ProcessListScreen extends HookConsumerWidget {
-  const ProcessListScreen({super.key});
+// DesktopScreen
+
+class ProcessDetailViewDesktopScreen extends HookConsumerWidget {
+  const ProcessDetailViewDesktopScreen({super.key, required this.processId});
+  final String processId;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final searchFocusNode = useFocusNode();
-    final searchActive = useState(false);
+    final process = ref
+        .watch(processListProvider)
+        .firstWhere((p) => p.id == processId);
 
-    useEffect(() {
-      listener() {
-        searchActive.value =
-            searchFocusNode.hasFocus ? true : searchActive.value;
-      }
-
-      FocusManager.instance.addListener(listener);
-      return () => FocusManager.instance.removeListener(listener);
-    }, [searchFocusNode]);
+    var titleText = "";
+    if (process.timeNeeded.inHours > 0) {
+      titleText =
+          "${process.processType.name} for ${process.timeNeeded.inHours.toString()}h, ";
+    }
+    titleText += "${process.deadline.difference(DateTime.now()).inDays}d left";
 
     return Scaffold(
       appBar: AppBar(
-        leading:
-            searchActive.value
-                ? IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () {
-                    if (searchActive.value) {
-                      searchActive.value = false;
-                      searchFocusNode.unfocus();
-                    }
-                  },
-                )
-                : null,
-        title: TextField(
-          decoration: const InputDecoration(
-            hintText: "Search",
-            border: InputBorder.none,
-          ),
-          focusNode: searchFocusNode,
-          onChanged: (value) {
-            ref.read(processNameFilterProvider.notifier).state = value;
-          },
-        ),
+        title: Text(titleText, style: Theme.of(context).textTheme.titleSmall),
         actions: [
-          if (ref.watch(selectedProcessesProvider).isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: () {
-                ref
-                    .read(selectedProcessesProvider)
-                    .forEach(
-                      (p) => ref
-                          .read(eventControllerProvider.notifier)
-                          .add(Event.deleteProcess(p)),
-                    );
-                ref.read(selectedProcessesProvider.notifier).clear();
-              },
-            ),
-
-          if (ref.watch(userControllerProvider).isLoggedIn) ...[
-            IconButton(
-              tooltip: "Sync",
-              icon: const Icon(Icons.refresh),
-              onPressed: () async {
-                try {
-                  final dio = ref.read(dioProvider);
-                  final serverStatus = await pingServer(dio);
-                  CommunicationService.showSnackbarAfterLastFrame(
-                    ref,
-                    serverStatus ? "Sync completed" : "Server is down",
-                  );
-
-                  if (!serverStatus) return;
-
-                  await for (final event in syncWithServer(
-                    dio,
-                    await ref.read(databaseProvider.future),
-                    ref.read(userControllerProvider).username,
-                    ref.read(processListProvider),
-                  )) {
-                    ref.read(eventControllerProvider.notifier).add(event);
-                  }
-                } catch (e) {
-                  CommunicationService.showDialogAfterLastFrame(
-                    e.toString(),
-                    "Sync failed",
-                  );
-                }
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.settings),
-              onPressed: () => context.push("/user"),
-            ),
-          ] else
-            IconButton(
-              icon: const Icon(Icons.login),
-              onPressed: () => context.push("/user/login"),
-            ),
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () => context.push("/process/${process.id}/edit"),
+          ),
+          IconButton(
+            icon: const Icon(Icons.copy),
+            onPressed:
+                () async => await Clipboard.setData(
+                  ClipboardData(
+                    text:
+                        "${processToText(process)}\nDeadline: ${formatDate(process.deadline, [yyyy, '-', mm, '-', dd])}",
+                  ),
+                ),
+          ),
         ],
       ),
+      body: ProcessDetailView(processId: processId),
+    );
+  }
+}
 
+class ProcessListDesktopScreen extends HookConsumerWidget {
+  const ProcessListDesktopScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final showDetailSearching = useState(false);
+
+    return Scaffold(
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(50),
+        child: SearchAppBar(showDetailSearching: showDetailSearching),
+      ),
       body: SafeArea(
-        child: Row(
+        child: Column(
           children: [
-            if (isDesktop()) const GroupList(),
-
-            Expanded(
-              flex: 6,
-              child: Column(
-                children: [
-                  if (searchActive.value)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      width: double.infinity,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text("Sort by"),
-                          Wrap(
-                            spacing: 8.0,
-                            runSpacing: 8.0,
-                            children: [
-                              FilterChip(
-                                label: const Text("Name"),
-                                onSelected: (value) {
-                                  ref.read(sortByProvider.notifier).state =
-                                      SortBy.name;
-                                },
-                              ),
-                              FilterChip(
-                                label: const Text("Deadline"),
-                                onSelected: (value) {
-                                  ref.read(sortByProvider.notifier).state =
-                                      SortBy.deadline;
-                                },
-                              ),
-                              FilterChip(
-                                label: const Text("Last Edit"),
-                                onSelected: (value) {
-                                  ref.read(sortByProvider.notifier).state =
-                                      SortBy.editAt;
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  Expanded(child: ListWithAnimatedHeader()),
-                ],
-              ),
-            ),
+            if (showDetailSearching.value) SearchOptionWidget(),
+            Expanded(child: ListWithAnimatedHeader()),
           ],
         ),
       ),
@@ -199,56 +104,106 @@ class ProcessListScreen extends HookConsumerWidget {
   }
 }
 
-class ListWithAnimatedHeader extends HookConsumerWidget {
-  const ListWithAnimatedHeader({super.key});
-  static const maxHeaderHeight = 100.0;
+// MobileScreen
+
+class ProcessListMobileScreen extends HookConsumerWidget {
+  const ProcessListMobileScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scrollController = useScrollController();
-    final overscrollExtent = useState(0.0);
+    final showDetailSearching = useState(false);
 
-    return NotificationListener<ScrollNotification>(
-      onNotification: (notification) {
-        return false;
-      },
+    return Scaffold(
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(120),
+        child: SearchAppBar(showDetailSearching: showDetailSearching),
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            if (showDetailSearching.value) SearchOptionWidget(),
+            Expanded(child: ListWithAnimatedHeader()),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-      child: Stack(
-        children: [
-          ListView.builder(
-            controller: scrollController,
-            itemCount: ref.watch(sortedProcessProvider).length + 1,
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                return true // isDesktop()
-                    ? Align(
-                      alignment: Alignment.center,
-                      child: TextButton.icon(
-                        onPressed: () => context.push("/process/create"),
-                        icon: const Icon(Icons.add),
-                        label: const Text("New process"),
-                      ),
-                    )
-                    : const SizedBox.shrink();
-              }
-              final process = ref.watch(sortedProcessProvider)[index - 1];
-              return ProcessListTile(processId: process.id);
-            },
-          ),
+class ProcessListWithDetailsMobileScreen extends HookConsumerWidget {
+  const ProcessListWithDetailsMobileScreen({super.key});
 
-          if (overscrollExtent.value > 0)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                height: maxHeaderHeight - overscrollExtent.value,
-                color: Theme.of(context).colorScheme.primary,
-                child: const Center(
-                  child: Text("✍️ New", style: TextStyle(color: Colors.white)),
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final showDetailSearching = useState(false);
+
+    return Scaffold(
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(120),
+        child: SearchAppBar(showDetailSearching: showDetailSearching),
+      ),
+      body: ProcessListWithDetailsWidget(
+        showDetailSearching: showDetailSearching,
+      ),
+    );
+  }
+}
+
+class ProcessDetailViewMobileScreen extends HookConsumerWidget {
+  const ProcessDetailViewMobileScreen({super.key, required this.processId});
+  final String processId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final process = ref
+        .watch(processListProvider)
+        .firstWhere((p) => p.id == processId);
+
+    var titleText = "";
+    if (process.timeNeeded.inHours > 0) {
+      titleText =
+          "${process.processType.name} for ${process.timeNeeded.inHours.toString()}h, ";
+    }
+    titleText += "${process.deadline.difference(DateTime.now()).inDays}d left";
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(titleText, style: Theme.of(context).textTheme.titleSmall),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.copy),
+            onPressed:
+                () async => await Clipboard.setData(
+                  ClipboardData(
+                    text:
+                        "${processToText(process)}\nDeadline: ${formatDate(process.deadline, [yyyy, '-', mm, '-', dd])}",
+                  ),
                 ),
-              ),
-            ),
+          ),
+        ],
+      ),
+      body: ProcessDetailView(processId: processId),
+    );
+  }
+}
+
+// Simple Screen
+
+class ProcessListWithDetailsWidget extends HookConsumerWidget {
+  const ProcessListWithDetailsWidget({
+    required this.showDetailSearching,
+    super.key,
+  });
+
+  final ValueNotifier<bool> showDetailSearching;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return SafeArea(
+      child: Column(
+        children: [
+          if (showDetailSearching.value) SearchOptionWidget(),
+          Expanded(child: ListWithAnimatedHeader()),
         ],
       ),
     );
@@ -265,94 +220,65 @@ class ProcessDetailView extends HookConsumerWidget {
         .watch(processListProvider)
         .firstWhere((p) => p.id == processId);
 
-    var titleText = "";
-    if (process.timeNeeded.inHours > 0) {
-      titleText =
-          "${process.processType.name} for ${process.timeNeeded.inHours.toString()}h, ";
-    }
-    titleText += "${process.deadline.difference(DateTime.now()).inDays}d left";
-
     final heightIndicator = useState(0.0);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(titleText, style: Theme.of(context).textTheme.titleSmall),
-        actions: [
-          if (isDesktop())
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () => context.push("/process/${process.id}/edit"),
-            ),
-          IconButton(
-            icon: const Icon(Icons.copy),
-            onPressed:
-                () async => await Clipboard.setData(
-                  ClipboardData(
-                    text:
-                        "${processToText(process)}\nDeadline: ${formatDate(process.deadline, [yyyy, '-', mm, '-', dd])}",
-                  ),
-                ),
-          ),
-        ],
-      ),
-      body: GestureDetector(
-        onVerticalDragUpdate: (details) {
-          heightIndicator.value += details.delta.dy * 0.90;
-          if (heightIndicator.value > 100) {
-            heightIndicator.value = 100;
-          } else if (heightIndicator.value < 0) {
-            heightIndicator.value = 0;
-          }
-        },
-        onVerticalDragEnd: (_) {
-          if (heightIndicator.value == 100) {
-            context.push("/process/${process.id}/edit");
-          }
+    return GestureDetector(
+      onVerticalDragUpdate: (details) {
+        heightIndicator.value += details.delta.dy * 0.90;
+        if (heightIndicator.value > 100) {
+          heightIndicator.value = 100;
+        } else if (heightIndicator.value < 0) {
           heightIndicator.value = 0;
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 70),
-                curve: Curves.easeInOut,
-                height: heightIndicator.value,
-                width: double.infinity,
-                alignment: Alignment.topCenter,
-                child: Text(
-                  "✍️Edit",
-                  style: Theme.of(context).textTheme.bodyLarge,
+        }
+      },
+      onVerticalDragEnd: (_) {
+        if (heightIndicator.value == 100) {
+          context.push("/process/${process.id}/edit");
+        }
+        heightIndicator.value = 0;
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 70),
+              curve: Curves.easeInOut,
+              height: heightIndicator.value,
+              width: double.infinity,
+              alignment: Alignment.topCenter,
+              child: Text(
+                "✍️Edit",
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+            ),
+            SizedBox(
+              width: double.infinity,
+              child: SelectableText(
+                process.name,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            SizedBox(
+              width: double.infinity,
+              child: SelectableText(
+                "${process.description}\nDeadline: ${formatDate(process.deadline, [yyyy, '-', mm, '-', dd])}",
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+            ),
+            const Gap(16),
+            Expanded(child: StepListView(processId: processId)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(process.groupName),
+                Text(
+                  'Assigned At: ${formatDate(process.assignedAt, [yy, '-', mm, '-', dd])}',
                 ),
-              ),
-              SizedBox(
-                width: double.infinity,
-                child: SelectableText(
-                  process.name,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
-              SizedBox(
-                width: double.infinity,
-                child: SelectableText(
-                  "${process.description}\nDeadline: ${formatDate(process.deadline, [yyyy, '-', mm, '-', dd])}",
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-              ),
-              const Gap(16),
-              Expanded(child: StepListView(processId: processId)),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(process.groupName),
-                  Text(
-                    'Assigned At: ${formatDate(process.assignedAt, [yy, '-', mm, '-', dd])}',
-                  ),
-                ],
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -434,35 +360,11 @@ class ProcessCreateView extends HookConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Autocomplete(
-              optionsBuilder: (textEditingValue) {
-                return ref
-                    .watch(processGroupsListProvider)
-                    .where(
-                      (group) => group.toLowerCase().contains(
-                        textEditingValue.text.toLowerCase(),
-                      ),
-                    )
-                    .toList();
-              },
-              onSelected: (value) {
-                process.value = process.value.copyWith(groupName: value);
-              },
-              fieldViewBuilder: (
-                context,
-                textEditingController,
-                focusNode,
-                onFieldSubmitted,
-              ) {
-                return TextField(
-                  controller: textEditingController,
-                  focusNode: focusNode,
-                  decoration: const InputDecoration(labelText: 'Group'),
-                  onChanged: (value) {
-                    process.value = process.value.copyWith(groupName: value);
-                  },
-                );
-              },
+            GroupAutocomplete(
+              setValue:
+                  (v) => process.value = process.value.copyWith(groupName: v),
+              likeFunction: simpleLikeFunction,
+              initialValue: process.value.groupName,
             ),
             TextField(
               decoration: const InputDecoration(labelText: 'Process info'),

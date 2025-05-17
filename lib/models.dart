@@ -7,7 +7,14 @@ import "./sources.dart";
 part 'models.g.dart';
 part 'models.freezed.dart';
 
-enum SortBy { name, deadline, editAt }
+enum SortBy {
+  name("Name"),
+  deadline("Deadline"),
+  editAt("Last update");
+
+  final String textRepresentation;
+  const SortBy(this.textRepresentation);
+}
 
 enum ProcessType {
   parallel("Parallel"),
@@ -248,4 +255,8 @@ class EditAt with _$EditAt {
   final DateTime editAt;
   factory EditAt.fromJson(Map<String, dynamic> json) => _$EditAtFromJson(json);
   Map<String, dynamic> toJson() => _$EditAtToJson(this);
+}
+
+bool simpleLikeFunction(String text, String searchText) {
+  return text.toLowerCase().contains(searchText.toLowerCase());
 }
