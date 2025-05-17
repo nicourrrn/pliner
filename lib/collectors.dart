@@ -62,7 +62,7 @@ List<Process> sortProcesses(List<Process> processes, SortBy sortBy) {
     case SortBy.deadline:
       return processes.sorted((a, b) => a.deadline.compareTo(b.deadline));
     case SortBy.editAt:
-      return processes.sorted((a, b) => a.editAt.compareTo(b.editAt));
+      return processes.sorted((a, b) => b.editAt.compareTo(a.editAt));
   }
 }
 

@@ -23,7 +23,7 @@ final _routerProvider = Provider<GoRouter>(
         builder:
             (context, state) =>
                 isLowWidthSize(context)
-                    ? const ProcessListMobileScreen()
+                    ? const ProcessListScreen()
                     : const ProcessSelectSplitedScreen(),
       ),
       GoRoute(

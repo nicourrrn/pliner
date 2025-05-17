@@ -6,6 +6,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import "package:go_router/go_router.dart";
 import 'package:date_format/date_format.dart';
 import "package:self_process_manager/sources.dart";
+import "package:self_process_manager/theme.dart";
 
 import "./models.dart";
 import "./controllers.dart";
@@ -22,13 +23,13 @@ class ProcessSelectSplitedScreen extends HookConsumerWidget {
       body: Row(
         children: [
           const GroupList(),
-          Expanded(flex: 2, child: ProcessListDesktopScreen()),
+          Expanded(flex: 2, child: ProcessListScreen()),
           Expanded(
             flex: 3,
             child:
                 choosedProcess.isEmpty
                     ? const Center(child: Text("Select process"))
-                    : ProcessDetailViewDesktopScreen(processId: choosedProcess),
+                    : ProcessDetailViewScreen(processId: choosedProcess),
           ),
         ],
       ),
@@ -36,52 +37,8 @@ class ProcessSelectSplitedScreen extends HookConsumerWidget {
   }
 }
 
-// DesktopScreen
-
-class ProcessDetailViewDesktopScreen extends HookConsumerWidget {
-  const ProcessDetailViewDesktopScreen({super.key, required this.processId});
-  final String processId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final process = ref
-        .watch(processListProvider)
-        .firstWhere((p) => p.id == processId);
-
-    var titleText = "";
-    if (process.timeNeeded.inHours > 0) {
-      titleText =
-          "${process.processType.name} for ${process.timeNeeded.inHours.toString()}h, ";
-    }
-    titleText += "${process.deadline.difference(DateTime.now()).inDays}d left";
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(titleText, style: Theme.of(context).textTheme.titleSmall),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () => context.push("/process/${process.id}/edit"),
-          ),
-          IconButton(
-            icon: const Icon(Icons.copy),
-            onPressed:
-                () async => await Clipboard.setData(
-                  ClipboardData(
-                    text:
-                        "${processToText(process)}\nDeadline: ${formatDate(process.deadline, [yyyy, '-', mm, '-', dd])}",
-                  ),
-                ),
-          ),
-        ],
-      ),
-      body: ProcessDetailView(processId: processId),
-    );
-  }
-}
-
-class ProcessListDesktopScreen extends HookConsumerWidget {
-  const ProcessListDesktopScreen({super.key});
+class ProcessListScreen extends HookConsumerWidget {
+  const ProcessListScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -92,56 +49,6 @@ class ProcessListDesktopScreen extends HookConsumerWidget {
         preferredSize: Size.fromHeight(50),
         child: SearchAppBar(showDetailSearching: showDetailSearching),
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            if (showDetailSearching.value) SearchOptionWidget(),
-            Expanded(child: ListWithAnimatedHeader()),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// MobileScreen
-
-class ProcessListMobileScreen extends HookConsumerWidget {
-  const ProcessListMobileScreen({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final showDetailSearching = useState(false);
-
-    return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(120),
-        child: SearchAppBar(showDetailSearching: showDetailSearching),
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            if (showDetailSearching.value) SearchOptionWidget(),
-            Expanded(child: ListWithAnimatedHeader()),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class ProcessListWithDetailsMobileScreen extends HookConsumerWidget {
-  const ProcessListWithDetailsMobileScreen({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final showDetailSearching = useState(false);
-
-    return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(120),
-        child: SearchAppBar(showDetailSearching: showDetailSearching),
-      ),
       body: ProcessListWithDetailsWidget(
         showDetailSearching: showDetailSearching,
       ),
@@ -149,8 +56,8 @@ class ProcessListWithDetailsMobileScreen extends HookConsumerWidget {
   }
 }
 
-class ProcessDetailViewMobileScreen extends HookConsumerWidget {
-  const ProcessDetailViewMobileScreen({super.key, required this.processId});
+class ProcessDetailViewScreen extends HookConsumerWidget {
+  const ProcessDetailViewScreen({super.key, required this.processId});
   final String processId;
 
   @override
@@ -159,25 +66,23 @@ class ProcessDetailViewMobileScreen extends HookConsumerWidget {
         .watch(processListProvider)
         .firstWhere((p) => p.id == processId);
 
-    var titleText = "";
-    if (process.timeNeeded.inHours > 0) {
-      titleText =
-          "${process.processType.name} for ${process.timeNeeded.inHours.toString()}h, ";
-    }
-    titleText += "${process.deadline.difference(DateTime.now()).inDays}d left";
+    final daysLeft = process.deadline.difference(DateTime.now()).inDays;
+    final titleText = daysLeft > 0 ? "$daysLeft d left" : "Expired";
 
     return Scaffold(
       appBar: AppBar(
         title: Text(titleText, style: Theme.of(context).textTheme.titleSmall),
         actions: [
+          if (isDesktop())
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () => context.push("/process/${process.id}/edit"),
+            ),
           IconButton(
             icon: const Icon(Icons.copy),
             onPressed:
                 () async => await Clipboard.setData(
-                  ClipboardData(
-                    text:
-                        "${processToText(process)}\nDeadline: ${formatDate(process.deadline, [yyyy, '-', mm, '-', dd])}",
-                  ),
+                  ClipboardData(text: processToText(process)),
                 ),
           ),
         ],
@@ -298,12 +203,14 @@ class ProcessCreateView extends HookConsumerWidget {
             : ref
                 .watch(processListProvider)
                 .firstWhere((process) => process.id == processId);
-    final process = useState(baseProcess);
 
+    final process = useState(baseProcess);
+    final lastLinesCount = useState(0);
+    final username = ref.read(userControllerProvider).username;
     final textEditingController = useTextEditingController(
       text: processToText(process.value),
     );
-    final lastLinesCount = useState(0);
+
     useEffect(() {
       textEditingController.selection = TextSelection.fromPosition(
         TextPosition(offset: baseProcess.name.indexOf("]")),
@@ -314,14 +221,11 @@ class ProcessCreateView extends HookConsumerWidget {
 
     useEffect(() {
       listener() {
-        final lines = textEditingController.text.split("\n");
         final text = textEditingController.text;
-        final isNewLine = text.endsWith("\n");
-        final previousTextIsStep = lines[lines.length - 2].trim().startsWith(
-          "-",
-        );
+        final lines = text.split("\n");
+        final previousTextIsStep = lines[lines.length - 2].startsWith("-");
         if (lines.length == lastLinesCount.value + 1 &&
-            isNewLine &&
+            text.endsWith("\n") &&
             previousTextIsStep) {
           final newText = "$text- ";
           textEditingController.value = TextEditingValue(
@@ -337,11 +241,10 @@ class ProcessCreateView extends HookConsumerWidget {
 
       return () => textEditingController.removeListener(listener);
     }, [textEditingController]);
-    final username = ref.read(userControllerProvider).username;
 
-    createProcess(bool isMandatory) {
+    createProcess() {
       process.value = process.value.copyWith(
-        isMandatory: isMandatory,
+        isMandatory: true,
         editAt: DateTime.now(),
       );
       final event =
@@ -383,19 +286,9 @@ class ProcessCreateView extends HookConsumerWidget {
               maxLines: 15,
             ),
             const Gap(16.0),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                ElevatedButton(
-                  onPressed: () => createProcess(false),
-                  child: const Text('To not mandatory'),
-                ),
-                const Gap(8.0),
-                ElevatedButton(
-                  onPressed: () => createProcess(true),
-                  child: const Text('To mandatory'),
-                ),
-              ],
+            ElevatedButton(
+              onPressed: createProcess,
+              child: const Text('To mandatory'),
             ),
           ],
         ),
@@ -516,6 +409,46 @@ class SettingScreen extends HookConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class ChatScreen extends HookConsumerWidget {
+  const ChatScreen({
+    required this.children,
+    required this.onSendMessage,
+    super.key,
+  });
+
+  final List<Widget> children;
+  final Function(String) onSendMessage;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final chatController = useTextEditingController();
+    final chatMessages = useState<List<String>>([]);
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Chat')),
+      body: Column(
+        children: [
+          ListView.builder(
+            itemCount: chatMessages.value.length,
+            itemBuilder: (context, index) {
+              return ListTile(title: Text(chatMessages.value[index]));
+            },
+          ),
+          TextField(
+            controller: chatController,
+            decoration: const InputDecoration(labelText: 'Message'),
+            onSubmitted: (value) {
+              chatMessages.value = [...chatMessages.value, value];
+              onSendMessage(value);
+              chatController.clear();
+            },
+          ),
+        ],
       ),
     );
   }

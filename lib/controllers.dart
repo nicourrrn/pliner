@@ -14,9 +14,9 @@ import "./models.dart" as models;
 
 part 'controllers.g.dart';
 
-const String _baseUrl = "http://192.168.0.103:8000/";
-
-final baseUrlProvider = StateProvider<String>((ref) => _baseUrl);
+final baseUrlProvider = StateProvider<String>(
+  (ref) => "http://localhost:8000/",
+);
 final processNameFilterProvider = StateProvider<String>((ref) => "");
 final choosedProcessProvider = StateProvider<String>((ref) => "");
 
